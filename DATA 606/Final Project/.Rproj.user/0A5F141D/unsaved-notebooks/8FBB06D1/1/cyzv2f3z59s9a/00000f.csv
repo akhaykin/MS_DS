@@ -1,0 +1,7 @@
+"0","vote_crime_reg <- glm("
+"0","  incumbent_win ~ change_in_crime_4,"
+"0","  data = vote_crime_national,"
+"0","  family = binomial(""probit"")"
+"0",")"
+"0",""
+"0","broom::tidy(vote_crime_reg) %>% kable()"

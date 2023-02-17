@@ -1,0 +1,87 @@
+---
+title: "DATA_607 Week_3 Assignmenty"
+author: "Alex Khaykin"
+date: "2023-02-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#INTRODUCTION
+  In this assignment I will work to extract string data from a fivethirtyeight article. I will create a table and pull out majors pertaining to "DATA or "Statistic"
+
+```{r}
+library(tidyverse)
+```
+
+#1. Using the 173 majors listed in fivethirtyeight.com’s College Majors dataset [https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/], provide code that identifies the majors that contain either "DATA" or "STATISTICS"
+
+```{r}
+college_majors <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/data/master/college-majors/majors-list.csv")
+```
+
+```{r}
+college_majors %>% filter(str_detect(Major, "DATA|STATISTICS")) %>%
+  pull(Major) %>% c()
+```
+
+#2 Write code that transforms the data below:
+
+[1] "bell pepper"  "bilberry"     "blackberry"   "blood orange"
+[5] "blueberry"    "cantaloupe"   "chili pepper" "cloudberry"  
+[9] "elderberry"   "lime"         "lychee"       "mulberry"    
+[13] "olive"        "salal berry"
+
+```{r}
+frutas <- data.frame(c("bell pepper", "bilberry", "blackberry","blood orange","blueberry","cantalope","chili pepper","cloudberry","elderberry","lime","lychee","mulberry","olive","salal berry"))
+cat(paste0(frutas))
+```
+
+#3 Describe, in words, what these expressions will match:
+
+(.)\1\1 = to match a pattern in a strings with character repeats three times or more
+
+
+"(.)(.)\\2\\1" =  match strings with a set of 4 characters, also to match with 2 characters in the same 2 characters in reverse
+
+
+(..)\1 = to match any strings that have a repeated pair of letters
+
+
+"(.).\\1.\\1" = to match any strings that have a repeated pair of characters
+
+
+"(.)(.)(.).*\\3\\2\\1" =  to match any character strings with any 3 characters that repeat in the reverse
+
+
+#4 Construct regular expressions to match words that:
+
+Start and end with the same character:
+
+"^(.)((.*\\1$)|\\1?$)"
+
+```{r}
+exp <- c("bob", "mom", "dad", "son", "baby", "drool", "pool", "spool", "cool", "shush", "banana")
+```
+
+```{r}
+str_subset(exp, "^(.)((.*\\1$)|\\1?$)")
+```
+
+Contain a repeated pair of letters (e.g. "church" contains "ch" repeated twice.):
+
+"([A-Za-z][A-Za-z]).*\\1"
+
+```{r}
+str_subset(exp,"([A-Za-z][A-Za-z]).*\\1")
+```
+
+Contain one letter repeated in at least three places (e.g. "eleven" contains three "e"s.)
+"([A-Za-z]).*\\1.*\\1"
+
+```{r}
+str_subset(exp, "([A-Za-z]).*\\1.*\\1")
+```
+

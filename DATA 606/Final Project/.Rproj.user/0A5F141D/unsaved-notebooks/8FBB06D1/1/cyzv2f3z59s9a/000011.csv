@@ -1,0 +1,1 @@
+"0","broom::glance(vote_crime_reg) %>% kable()"

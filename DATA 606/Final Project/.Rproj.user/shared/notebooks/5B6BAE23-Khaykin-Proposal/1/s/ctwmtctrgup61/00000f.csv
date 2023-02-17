@@ -1,0 +1,20 @@
+"0","glimpse(votes_crime)"
+"1","Rows: 2,142"
+"1",""
+"1","
+"
+"1","Columns: 8"
+"1",""
+"1","
+"
+"1","$ state             [3m[38;5;246m<I<chr>>[39m[23m ALABAMA, ALASKA, ARIZONA, ARKANSAS, CALIFOR…
+$ year              [3m[38;5;246m<int>[39m[23m 1979, 1979, 1979, 1979, 1979, 1979, 1979, 1979…
+$ tot_violent_crime [3m[38;5;246m<int>[39m[23m 15578, 1994, 14528, 7984, 184087, 14472, 12902…
+$ total_votes       [3m[38;5;246m<dbl>[39m[23m NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
+$ DEMOCRAT          [3m[38;5;246m<int>[39m[23m NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
+$ LIBERTARIAN       [3m[38;5;246m<int>[39m[23m NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
+$ OTHER             [3m[38;5;246m<int>[39m[23m NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
+$ REPUBLICAN        [3m[38;5;246m<int>[39m[23m NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…"
+"1",""
+"1","
+"

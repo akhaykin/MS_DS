@@ -1,0 +1,8 @@
+"0",""
+"0","ggplot() +"
+"0","  geom_col("
+"0","    data = vote_summ,"
+"0","    aes(year, vote_pct)"
+"0","  ) +"
+"0","  scale_y_continuous(labels = scales::percent) +"
+"0","  facet_wrap(~party, scales = ""free_y"")"

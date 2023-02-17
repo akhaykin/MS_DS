@@ -1,0 +1,3 @@
+Link to Presidential Election data -- https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/42MVDX#
+
+Link to the Crime Data -- https://usafacts.org/data/topics/security-safety/crime-and-justice/crime-and-police/violent-crimes/?utm_source=google&utm_medium=cpc&utm_campaign=ND-StatsData

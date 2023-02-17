@@ -1,0 +1,119 @@
+---
+title: "Khaykin-Proposal.Rmd"
+author: "Alex Khaykin"
+date: "2022-11-10"
+output: pdf_document
+---
+
+### Data Preparation
+
+```{r setup, echo=TRUE, results='hide', warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+# load data
+pres_elect <- read_rds("../pres_elect.rds")
+crime <- read_rds("../crime.rds")
+votes_crime <- read_rds("../votes_crime_1979-2020_data.rds")
+```
+
+
+### Research question 
+
+How does violent crime in the United Staes affect the popular vote trends across  the states?
+
+### Cases 
+
+**What are the cases, and how many are there?**
+
+The cases are total violent crime data by state from 1979 through 2020, merged with presidential election vote tallies by political party for all states for the same time period.
+
+```{r glimps_data}
+glimpse(votes_crime)
+```
+
+
+
+### Data collection 
+
+**Describe the method of data collection.**
+
+The data for presidential elections by states was downloaded from MIT Election Data and Science Lab website. The link to the data is below:
+
+https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/42MVDX#
+
+The violent crime rate data by state was downloaded from Federal Bureau of Investigation Crime Data Explorer website. The link to the data is below:
+
+https://usafacts.org/data/topics/security-safety/crime-and-justice/crime-and-police/violent-crimes/?utm_source=google&utm_medium=cpc&utm_campaign=ND-StatsData
+
+### Type of study 
+
+**What type of study is this (observational/experiment)?**
+
+This is an observation study of historical data.
+
+### Data Source 
+
+**If you collected the data, state self-collected. If not, provide a citation/link.**
+
+Please see links to the data and websites utilized:
+
+https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/42MVDX#
+
+
+https://usafacts.org/data/topics/security-safety/crime-and-justice/crime-and-police/violent-crimes/?utm_source=google&utm_medium=cpc&utm_campaign=ND-StatsData
+
+
+### Dependent Variable
+
+**What is the response variable? Is it quantitative or qualitative?**
+
+The dependant response variable, is the party that von the popular vote in each state. This is a qualitative variable.
+
+
+### Independent Variable(s)
+
+The independant variable is the violent crime totals in each year by state. This is a quantitative variable.
+
+
+### Relevant summary statistics 
+
+**Provide summary statistics for each the variables. Also include appropriate visualizations related to your research question (e.g. scatter plot, boxplots, etc). This step requires the use of R, hence a code chunk is provided below. Insert more code chunks as needed.**
+
+The summary statistics are total popular votes as a percentage and crime data for the entire country. Please see plots below.
+
+```{r crime_vote_plots}
+vote_summ <- pres_elect %>%
+  select(year, DEMOCRAT:REPUBLICAN) %>%
+  pivot_longer(-year, names_to = "party", values_to = "votes") %>%
+  group_by(year, party) %>%
+  summarise(
+    tot_votes = sum(votes, na.rm = TRUE),
+    mean_votes = mean(votes, na.rm = TRUE),
+    .groups = "drop_last"
+  ) %>%
+  mutate(vote_pct = tot_votes / sum(tot_votes))
+
+crime_summ <- crime %>%
+  group_by(year) %>%
+  summarise(
+    tot_violent_crime = sum(tot_violent_crime, na.rm = TRUE),
+    mean_violent_crime = mean(tot_violent_crime, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ggplot() +
+  geom_line(
+    data = crime_summ,
+    aes(year, tot_violent_crime)
+  )
+
+ggplot() +
+  geom_col(
+    data = vote_summ,
+    aes(year, vote_pct)
+  ) +
+  scale_y_continuous(labels = scales::percent) +
+  facet_wrap(~party, scales = "free_y")
+vote_summ
+crime_summ
+```

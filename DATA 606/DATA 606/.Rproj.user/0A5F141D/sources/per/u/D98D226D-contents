@@ -1,0 +1,7 @@
+sfo_feb_flights %>%
+  group_by(carrier) %>%
+  summarise(
+    ad_median = median(arr_delay),
+    ad_iqr = IQR(arr_delay),
+    .groups = "drop"
+  )

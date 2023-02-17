@@ -1,0 +1,4 @@
+"0","lax_flights <- nycflights %>%"
+"0","  filter(dest == ""LAX"")"
+"0","ggplot(data = lax_flights, aes(x = dep_delay)) +"
+"0","  geom_histogram()"

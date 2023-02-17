@@ -1,0 +1,6 @@
+"0","knitr::opts_chunk$set(echo = TRUE)"
+"0","library(tidyverse)"
+"0","# load data"
+"0","pres_elect <- read_rds(""../pres_elect.rds"")"
+"0","crime <- read_rds(""../crime.rds"")"
+"0","votes_crime <- read_rds(""../votes_crime_1979-2020_data.rds"")"
