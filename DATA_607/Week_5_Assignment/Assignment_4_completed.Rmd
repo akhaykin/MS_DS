@@ -1,0 +1,44 @@
+---
+title: "Data_607_Assignment_4"
+author: "Alex Khaykin"
+date: "2/22/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+#Introduction. 
+#In this assignment I took unstructured data for two arilines and the status of arivals and delays to five airports.
+
+```{r}
+flight_data <- read.csv("C:/Users/akhay/OneDrive/Documents/Data Science/DATA607/Week_5/Flight_Data.csv")
+head(flight_data)
+```
+
+```{r}
+flight_data_2 <- flight_data %>%
+  rename(airline = "X", status = "X.1") %>% 
+  mutate(airline = na_if(airline, "")) %>%
+  fill(airline) %>% 
+  pivot_longer(-c(airline, status), names_to = "airport", values_to = "status_count")
+  # pivot_wider(names_from = airline, values_from = status_count)
+
+flight_data_2 %>% 
+  group_by(status, airline) %>% 
+  summarise(mean_count = mean(status_count)) %>%
+  pivot_wider(names_from = airline, values_from = mean_count)
+```
+```{r}
+flight_data_2 %>%
+  ggplot(aes(x = airline, y = status_count, fill = airline)) +
+  geom_boxplot() + 
+  facet_wrap(~ status, scales = "free_y")
+```
+#Conclusion.
+#I used various functions to scrub and clean the data to prepare for analysis and visualization.
