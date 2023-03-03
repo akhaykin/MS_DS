@@ -1,0 +1,70 @@
+---
+title: "DATA_607 PROJECT_2 DOg_Bite_Data"
+author: "Alex Khaykin"
+date: "3/1/2023"
+output: html_document
+---
+
+# INTRODUCTION:
+Dog attacks are of a particular interest to me personally, as someone who has been attacked by a vicious doberman. However, the data is very messy and untidy. I will attempt to clean it up by removing missing data, and converting all dog ages into years. The data analysis will focus on looking for a relationship between dog attacks and gender. As well as dog attacks and status of spay neuter. 
+
+To call in knitr.
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+To call in the libraries.
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+```
+
+To read in the data.
+```{r}
+dog_bite <- read_csv("DOHMH_Dog_Bite_Data.csv") 
+dog_bite <- as_tibble(dog_bite)
+```
+
+# Cleaning the dataset
+If the the data contains a just a number, we assume it is already in years. If the data contains "M", its months, and similarly if the data contains a "W" its in weeks.
+
+```{r}
+dog_bite$Age <- gsub("Y", "", dog_bite$Age)
+
+for(i in 1:nrow(dog_bite)){
+  #print(i)
+#dealing with months that were given as a range.
+  if( grepl("[0-9]-[0-9]M", dog_bite[i, "Age"], ignore.case = TRUE)){
+temp = gsub("-[0-9]M", "", dog_bite[i, "Age"])
+temp = as.numeric(temp)
+dog_bite[i, "Age"] <- as.character(round(temp/12, 3))
+}
+#dealing with the remaining months.
+if( grepl("M", dog_bite[i, "Age"], ignore.case = TRUE)){
+temp = gsub("M", "", dog_bite[i, "Age"])
+temp = as.numeric(temp)
+dog_bite[i, "Age"] <- as.character(round(temp/12, 3))}
+#dealing with weeks.
+if( grepl("W", dog_bite[i, "Age"], ignore.case = TRUE)){
+temp = gsub("W", "", dog_bite[i, "Age"])
+temp = as.numeric(temp)
+dog_bite[i, "Age"] <- as.character(round(temp/52, 3))
+}}
+```
+
+#Visualization
+Is there a relationship between age, gender assigned at birth, Spayed status.
+
+```{r}
+ggplot(dog_bite, aes(y = as.numeric(Age), x = Gender, fill = Gender)) +
+geom_boxplot() + ylab("Dog Age in Years")
+```
+
+```{r}
+ggplot(dog_bite, aes(y = as.numeric(Age), x = SpayNeuter, fill = Gender)) +
+geom_boxplot() + ylab("Dog Age in Years")
+```
+
+#CONCLUSION
+In conclusion the data the there seems to be a relationship between gender and attacks. More male dogs a responsible for more attacks then female dogs, however no clear relationship exists between status of spay neuter an attacks.
