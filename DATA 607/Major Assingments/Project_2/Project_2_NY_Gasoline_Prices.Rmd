@@ -1,0 +1,67 @@
+---
+title: "Data_607_Project_2"
+author: "Alex Khaykin"
+date: "3/2/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#INTRODUCTION:
+As a life long driver of gasoline powered vehicles, and someone who rightfully believes that so called "renewable" energies are not ready to replace fossil fuel sources, yet. What most people tend to forget or ignore is that most electric energy is still produced by burning fossil fuels. The cost of of reliable gasoline is on utmost importance not just for me on an individual level but for society as a whole. There is good reason why emerging economies like china, are not participating in the green new deal like endeavors, and are instead utilizing cheaper, more reliable, and much more efficient fossil fuels sources. In this analysis I will explore the relationship of gas prices in NYS cities and townships.
+
+To call in the libraries.
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+```
+
+
+```{r}
+gas_prices <- read_csv("Gasoline_Retail_Prices_Data.csv")
+```
+
+
+To clean up and tidy the data by pivoting longer, switching the way the data and variable variables are presented.  
+```{r}
+monthly_avg_gas_price <- gas_prices %>% 
+  pivot_longer(
+    -Date, 
+    names_to = "Location", 
+    values_to = "Average Price - Dollars Per Gallon"
+  ) %>% 
+  mutate(
+    Location = str_remove(Location, " Average \\(\\$\\/gal\\)"),
+    Date = mdy(Date),
+    Year = year(Date),
+    Month = month(Date),
+    year_month = str_c(Year,Month, "1", sep = "-") %>%
+      ymd()
+  ) %>%
+  group_by(Location, year_month) %>%
+  summarise(mnthly_avg_price = mean(`Average Price - Dollars Per Gallon`), .groups = "drop")
+```
+
+To add visualization plot.
+```{r}
+city_prices <- monthly_avg_gas_price %>%
+  filter(!Location %in% "New York State")
+state_prices <- monthly_avg_gas_price %>%
+  filter(Location %in% "New York State") 
+
+ggplot() +
+  geom_line(
+    data = city_prices, 
+    aes(x = year_month, y = mnthly_avg_price, color = Location, group = Location)
+  ) +
+  geom_line(
+    data = state_prices,
+    aes(x = year_month, y = mnthly_avg_price), 
+    color = "black"
+  )
+```
+#CONCLUSION
+To conclude I could not find a relationship between price and location. The price seems to move up and down in concert within the entire NYS. In my opinion electric vehicles look cool and have lots of cool gadgets. Personally I cannot wait unit technology and innovation creates a viable alternative to gasoline powered cars that the average american can afford.
