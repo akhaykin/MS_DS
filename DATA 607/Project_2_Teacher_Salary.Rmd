@@ -1,0 +1,52 @@
+---
+title: "Data_607_Project2_Teacher_Salaries"
+author: "Alex Khaykin"
+date: "2023-02-25"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#INRTODUCTION:
+The teachers salary and years of experience data set I selected was of interest because my wife works for the UFT. The column headers required were not very helpful and required renaming. Also, some rows contained data that was not useful or relevant and that needed to be changed to NAs. I believe it would help to see a visual analysis of the salaries when compared to the the average salary. 
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+```
+
+Reading in the salary data.
+
+```{r}
+salary_data = read.csv("Teacher_Salary_Data.csv")
+str(salary_data)
+```
+
+Data cleaning. Turning all -1 and -2 into NAs.
+
+```{r}
+salary_data = salary_data %>% mutate_all(~na_if(.,-1)) 
+salary_data = salary_data %>% mutate_all(~na_if(.,-2)) 
+```
+
+Changing the column title to better represent the data. 
+
+```{r}
+salary_data = salary_data %>% rename(School_ID_Number = NCESSCH, Percent_BA_Degree = PCT_BACH, Percent_Advanced_Degree = PCT_ADVC, Proportion_Under_6_Yrs_Exp = P_EXPLT6, Proportion_Over_5_Yrs_Exp = P_EXPGT5, Mean_Yrs_Exp = MEAN_EXP, Mean_Salary_Under_6_Yrs_Exp = M_BSALT6, Mean_Salary_Over_5_Yrs_Exp = M_BSAGT5, Mean_Baseline_Salary = M_BSAL)
+head(salary_data)
+```
+
+To analyze if there is a relationship between mean salary and years of experience.
+
+```{r}
+ggplot(salary_data, aes(x = Mean_Yrs_Exp, y = Mean_Baseline_Salary)) + 
+  geom_point() +
+  geom_smooth(method = "lm") + 
+  ylab("Mean Baseline Salary USD") + 
+  xlab("Mean Years of Experience")
+```
+
+#CONCLUSION
+As expected there is a positive linear relationship between years of experience and average baseline salary.When organized and cleaned the data tell story that is easily readable and a relationship is easily identified. 
