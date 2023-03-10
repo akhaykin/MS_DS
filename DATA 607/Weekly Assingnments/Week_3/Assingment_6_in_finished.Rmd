@@ -1,0 +1,48 @@
+---
+title: "DATA_607_Assignment_6"
+author: "Alex Khaykin"
+date: "3/7/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# INTRODUCTION
+The goal of this project is to learn how to create and read in tables in the JSON, HTML, and XML formats. In this project I selected three of my favorite books, one of which has two authors. 
+
+## JSON
+Calling in the library RJSON.
+```{r}
+library(rjson)
+```
+
+To read in the JSON table and convert to data-frame.
+```{r}
+my_fav_books <- fromJSON(file = "my_three_books.JSON")
+my_fav_books <- as.data.frame(my_fav_books)
+my_fav_books
+```
+
+## HTML
+To load the package XML.
+```{r}
+library(XML)
+```
+
+To read in the HTML table and convert to data-frame. 
+```{r}
+my_fav_books2 <- readHTMLTable(doc = "my_three_books.html", as.data.frame = TRUE)
+my_fav_books2
+```
+## XML
+To read in the XML table and convert to data-frame. 
+```{r}
+my_fav_books3 <- xmlToDataFrame(doc = "my_three_books.xml")
+my_fav_books3
+```
+
+# CONCLUSION
+Comparing the JSON to HTML and XM, once converted to data-frame all are identical. Further, however please note I had to name the columns identically and in the same case for the column headers to be the same. 
+
