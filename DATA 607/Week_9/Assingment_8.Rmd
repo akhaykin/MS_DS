@@ -1,0 +1,72 @@
+---
+title: "Data_707_Assignment_8"
+author: "Alex Khaykin"
+date: "2023-03-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# INTRODUCTION
+API is an application program interface and in data science can be used to access data gateways. The data can then be used for analytical purposes or be joined with other data sources.
+I used the "search article" API from the NY Times to demonstrate how to create an API access point and search for specific terms in the NY Times article database. 
+
+```{r}
+library(jsonlite)
+```
+
+Setting up the API. First we will need the URL to the API, second is the key, and lastly will need the secret code if promted. 
+
+```{r}
+url <- "https://api.nytimes.com/svc/search/v2/articlesearch.json?q="
+q <- "election"
+
+my_key <- "NtQ6ouZLtT1WRn3D1yyWBnE6LDC8k4rd" 
+
+path <- paste(url,q, "&api-key=", my_key,sep = "")
+
+secret <- "CA4tF5V4MlDBUwZp"
+```
+
+Using the fromJSON function to access the API.
+
+```{r}
+stories <- fromJSON(path)
+attributes(stories)
+```
+```{r}
+stories.df <- data.frame(stories$response)
+head(stories.df)
+dim(stories.df)
+```
+
+Todays article headline with query search term "election".
+
+```{r}
+stories.df$docs.headline$print_headline
+```
+
+To change the search term, "Biden".
+```{r}
+q <- "Biden"
+path <- paste(url,q, "&api-key=", my_key,sep = "")
+stories <- fromJSON(path)
+stories.df <- data.frame(stories$response)
+stories.df$docs.headline$print_headline
+```
+
+To change the search term, "COVID".
+
+```{r}
+q <- "COVID"
+path <- paste(url,q, "&api-key=", my_key,sep = "")
+stories <- fromJSON(path)
+stories.df <- data.frame(stories$response)
+stories.df$docs.headline$print_headline
+```
+
+# CONCLUSION
+To conclude I accessed the API to article search, and created a dataframe from the JSON data that was loaded through out the API gateway. To prove beyond a reasonable doubt this works, I modified the query seach to pull in headlines published today that match those search terms.
+
