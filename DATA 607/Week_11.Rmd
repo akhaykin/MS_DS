@@ -1,0 +1,52 @@
+---
+title: "Week 11 Discussion"
+author: "Alex Khaykin"
+date: "2023-04-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Introduction
+
+The assignment for this week's discussion items is to analyze an existing recommender system.
+
+1. Perform a Scenario Design analysis as described below.  Consider whether it makes sense for your selected recommender system to perform scenario design twice, once for the organization (e.g. Amazon.com) and once for the organization's customers.
+2. Try to reverse engineer what you can about the site, from the site interface and any available information that you can find on the Internet or elsewhere.
+3. Include specific recommendations about how to improve the site's recommendation capabilities going forward. 
+4. Create your report using an R Markdown file, and create a discussion thread with a link to the GitHub repo where your Markdown file notebook resides.  You are not expected to need to write code for this discussion assignment.
+
+## Scenario design for Spotify:
+
+Spotify asks design scenario questions more than twice; Spotify runs its recommender systems for items similar to what the listener is already is listening to and then again adjusts at some point to suggest music based on an algorithm. 
+
+## Who are the target users of Spotify?
+
+Everyone, this is broad but it is true that music provides more than a product it provides an experience and in some cases inspiration as well as slew of other emotions. 
+
+## What are the key goals?
+
+Spotify aims to provide the best of music streaming possible, the company mission is for the name Spotify to be synonymous with the work music. I believe they have succeeded.
+
+## How Spotify helps listeners receive best new music recommendations?
+
+There are three recommendation models at work on Spotify.
+a. Collaborative filtering: Uses behavior and that of similar users.
+b. Natural Language Processing (NLP): For song lyrics, playlists, blogs, and social media comments.
+c. Audio models: Uses raw audio.
+
+## Improvements for Spotify's recommender system:
+
+Unclear that it is possible to improve on perfection, certainly not by me. I am a user, and a very happy one at that. I have used other services including Apple music, pandora, Napster and more probably I forgot. Spotify is hands down the best. 
+
+##Conclusion
+
+In conclusion Spotify uses Scenario Design questions to improve listener experience and new music recommendations. Various algorithms are at work to not only provide recommendation of what is being listened to but calculations are happening in real time, how long a song is listened to, was it skipped and when, and what other "similar" listeners are listening to.
+
+## References
+
+https://towardsdatascience.com/how-spotify-recommends-your-new-favorite-artist-8c1850512af0
+
+https://via.studio/journal/a-critical-look-at-spotify-algorithms
