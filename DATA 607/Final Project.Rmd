@@ -1,0 +1,293 @@
+---
+title: "Data607_Final Project"
+author: "Alex Khaykin"
+date: "2023-04-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# INTRODUCTION
+The firearm suicide epidemic has been growing, with the firearm suicide rate increasing 12.5% over the last decade (2010-2019). While females are more likely than males to attempt suicide, males are four times more likely to die by suicide.  Across all demographics, males have higher rates of firearm suicide and suicide overall. This is primarily due to the fact that males are more likely to use a more lethal suicide attempt method, such as firearms. Suicide attempts among males are eight times more likely to involve firearms than attempts among females. Firearm suicide rates vary substantially across the country. Suicide rates (both overall and by firearm) are generally higher in places where household firearm ownership is more common. In 2019, New Jersey had the lowest firearm suicide rate, while Wyoming had the highest. I am very interested in answering the following questions:
+
+* Is there a geographic distribution to gun-related suicide rates in the United States?
+* Has there been an increase in firearm related suicides over time?
+* Are firearm related suicides influenced by median household income or statewide poverty rates? 
+
+To answer these question, I combined two separate data sources. To obtain the median household income and poverty rates, I used a US Census API for all years for which firearms-related suicide data are [available](https://api.census.gov/data/timeseries/poverty/saipe). For firearm-related suicide and ownership data, I used the database compiled by the Rand Corp. that includes those [data](https://www.rand.org/research/gun-policy/analysis/essays/firearm-availability-suicide.html) by state for the years 1981 – 2002. 
+
+The motivation behind this project is one of a personal nature for me, as a good friend in our circle was having mental health issues and ended up taking his own life with a firearm. In order to extend what was learned in class, I used ggmap as my new tool to show suicide rates across the entirety of the United States. I then combined this with other visualizations to address the questions I set forth to answer. 
+
+## Data import, cleaning, & joining
+
+Load the requisite libraries:
+```{r}
+library(jsonlite)
+library(readxl)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(ggmap)
+library(viridis)
+library(forcats)
+```
+
+#### Relational data source
+Import the Rand Corp. gun-related suicide rate [data](https://www.rand.org/research/gun-policy/analysis/essays/firearm-availability-suicide.html) from an excel file:
+```{r}
+suicide = read_excel("TL-354-State-Level Estimates of Household Firearm Ownership.xlsx", sheet = 2)
+head(suicide)
+dim(suicide)
+str(suicide)
+```
+
+#### API data source
+I chose to use a [US Census API](https://api.census.gov/data/timeseries/poverty/saipe) that contained state-wide data on median household income and poverty rates, by year. To access the API, I had to register for a key with the US Census Bureau. I also wrote a for loop to iterate over all of the available years (1995 - 2016) to import and collate those data into a single dataframe that I could later join with the gun-related suicide data.
+**Note: **
+Census data only available from 1995 forward.
+```{r}
+years = (unique(suicide$Year))
+years = years[years > 1994]
+years = as.character(years)
+header <- c("Median_Household_Income", "All_Ages_Poverty_Count", "All_Ages_Poverty_Rate", "All_Ages_Poverty_Universe", "State_Name", "State_Abbr", "Year", "State_FIPS")
+census_all = data.frame(matrix(ncol = length(header), nrow = 0))
+for (y in 1:length(years)) {
+  year <- years[y]
+  print(year)
+  key <- "44427d638aa029da61ae1cce5abe89e33be89f8e"
+  get <- "SAEMHI_PT&&SAEPOVALL_PT&SAEPOVRTALL_PT&SAEPOVU_ALL&NAME&STABREV"
+  for.statemt <- "state:*&time=" 
+  # url <- "https://api.census.gov/data/timeseries/poverty/saipe?get=SAEMHI_PT&&SAEPOVALL_PT&NAME&for=state:*&time=2018"
+  base.url <- "https://api.census.gov/data/timeseries/poverty/saipe"
+  url <- paste(base.url, "?get=", get, "&for=", for.statemt, year, sep = "")
+   key.path <- paste("&key=", key, sep = "")
+  path <- paste(url, key.path, sep = "")
+  
+  census <- as.data.frame(fromJSON(path))
+  census <- census[-1, ]
+  
+  names(census) <- header
+  census_all = rbind(census_all, census)
+}
+## Drop All_Ages_Poverty_Universe since it was an empty column:
+census_all <- census_all %>% select(-All_Ages_Poverty_Universe)
+
+## Fix the first 3 columns, which came in as character:  
+census_all <- census_all %>% 
+  mutate(Median_Household_Income = as.numeric(Median_Household_Income), 
+         All_Ages_Poverty_Count = as.numeric(All_Ages_Poverty_Count),
+         All_Ages_Poverty_Rate = as.numeric(All_Ages_Poverty_Rate))
+
+head(census_all)
+# View(census_all)
+# table(census_all$Year)
+```
+
+#### Joining the suicide and census dataframes
+Next, I merged the suicide rate data with the census data by year. First, I converted year to character type in the suicide dataframe. I also chose to rename the "State_Name" column that was imported from the Census API to "STATE" to make the join simpler. I performed a right_join on the dataframes because I wanted all of the suicide data retained.
+
+```{r}
+suicide$Year <- as.character(suicide$Year)
+
+census_all <- census_all %>% 
+  rename(STATE = State_Name)
+
+suicide_census <- right_join(suicide, census_all, by = c("Year", "STATE"))
+head(suicide_census)
+```
+#### Computing the average suicide rate from the male and female rates:
+```{r}
+suicide_census$ave_sr = rowMeans(suicide_census[,8:9])
+```
+
+#### Importing state longitude and latitude data for mapping
+These data were downloaded from a [publicly available site](https://developers.google.com/public-data/docs/canonical/states_csv) that gave the center long,lat coordinates for every state in the US.
+```{r}
+st_geo = read.csv("state_lat_lon.csv")
+```
+
+This was then joined to the merged suicide-census dataframe to make a complete dataframe with necessary geographic information for mapping.
+
+```{r}
+suicide_census_geo = full_join(suicide_census, st_geo, by = "STATE")
+head(suicide_census_geo)
+```
+
+# ANALYSIS
+
+## Q1: Is there a geographic distribution to gun-related suicide rates in the United States?
+
+First, I computed the average suicide rate for males and females across the years available 1995 - 2016, and plotted it on a US map by state using **ggmap** qmplot() function.
+
+```{r}
+## Set the view for the United States by Latitude and Longitude coordinates
+us <- c(left = -125, bottom = 25.75, right = -67, top = 49)
+
+## Get the US map and appropriate zoom on the map, as well as to set the correct color tone for visualization
+us_map <- get_stamenmap(us, zoom = 5, maptype = "toner-lite")
+
+## Plot the map with average suicide rates as bubbles on the map using qmplot()
+  qmplot(lon, lat, data = suicide_census_geo, maptype = "toner-lite", size = ave_sr, color = ave_sr) + 
+    scale_color_viridis(discrete = FALSE, direction = -1) +
+    ggtitle("Average Adult Suicide Rate by Firearm 1995 - 2016") +
+    theme(legend.title = element_blank())
+```
+**Comments**: Larger, darker dots represent states with higher average suicide rates, where the average was computed from male and female rates. This is an average over time, 1995 - 2016. There seems to be some geographic clustering, such that some of the highest rates are in the Southeastern US and some of the lowest rates are in the Northeastern US and Hawaii.
+
+
+## Q2: Has there been an increase in firearm related suicides over time?
+
+To answer this, I explored the suicide rate trends over time for the average suicide rate, as well as for the male and female suicide rates provided by the Rand data.
+
+To plot these, I needed to omit any missing data, and pivot the data into a long-format using pivot_longer(). I used the Loess (pronounced "Loss") method to examine the trends over the period 1996 - 2016.
+
+```{r}
+suicide_census_geo %>% select(Year, ave_sr, Fem_FS_S, Male_FS_S) %>%
+  na.omit() %>% pivot_longer(cols = c("ave_sr", "Fem_FS_S", "Male_FS_S"), names_to="Suicide Rate", values_to = "SR") %>% mutate(`Suicide Rate` = if_else(`Suicide Rate` == "ave_sr", "Average", if_else(`Suicide Rate` == "Fem_FS_S", "Female","Male"))) %>% 
+  ggplot(aes(x = as.numeric(Year), y = SR, fill = `Suicide Rate`, col = `Suicide Rate`)) +
+  geom_point(show.legend = F) +
+  geom_smooth(method = "loess", show.legend = T) + 
+  labs(x = "Year", y = "Suicide Rate") +
+  ggtitle("Suicide Rate by Year and Sex, 1995 - 2016") +
+  theme_minimal()
+```
+
+**Comments**: Firearm related suicides are notably lower for females then they are for their male counterparts. Before 2005, suicide rates especially in females, seemed to be declining more rapidly. But for both males and females, and thus the average, gun-related suicide rates appear to be more level 2006 - 2016. A possible follow-up would be to see if there is an attributable cause for the slowed decline in female gun-related suicides in more recent years.
+
+
+## Q3: Are firearm related suicides influenced by median household income or statewide poverty rates? 
+###Median Household Income
+I first made a scatter plot of average suicide rates by the mean household income for all states and years in the datase. I then created a trend line to see the relationship between the two variables. I removed missing data before plotting.
+
+```{r}
+suicide_census_geo %>% select(Year, ave_sr, Median_Household_Income, State_Abbr.x) %>%
+  na.omit() %>% 
+  ggplot() +
+  geom_point(aes(x = as.numeric(Median_Household_Income), y = ave_sr), col = "darkgrey") +
+  geom_smooth(aes(x = as.numeric(Median_Household_Income), y = ave_sr),method = "lm", col = "black") +
+  labs(x = "Median Household Income USD", y = "Average Suicide Rate") +
+  ggtitle("Negative Correlation Between Suicide and Household Income Rates in \n All States, 1995 - 2016") +
+  theme_minimal()
+```
+**Comment**: A obvious negative correlation is present between suicide rates and increase in median household income for all states and years in the dataset. 
+
+
+I next need to aggregate across all of the years by state to find the mean Median Household Income and mean Average Suicide Rate (average of males and females).
+
+```{r}
+suicide_census_geo$Median_Household_Income <- as.numeric(suicide_census_geo$Median_Household_Income)
+tab1 <- suicide_census_geo %>% select(ave_sr, Median_Household_Income, State_Abbr.x) %>%
+  na.omit() %>% group_by(State_Abbr.x) %>% 
+  summarise(`Prop. Household Income` = mean(Median_Household_Income), `Mean Suicide Rate` = mean(ave_sr)) %>%
+  arrange(desc(`Mean Suicide Rate`))
+head(tab1)
+```
+I also need to grab the 10 states with the lowest suicide rates as well as make a dataframe that has the states in order of decreasing suicide rates.
+
+```{r}
+top.states <- tab1  %>% top_n(10) %>% select(State_Abbr.x)
+order.states <- tab1 %>% select(State_Abbr.x)
+```
+
+**Compute Proportion of Maximum Median Household Income**
+Because I want to display both the suicide rate, which is a proportion, and the median household income on the same axis & compare them, I then computed the proportion of the maximum median household income as follows:
+
+$\hat{p}_{medianHI} = \frac{MedianHI}{MaxHI}$
+
+The states with the maximum average median household income over all the years in the dataset were as follows:
+```{r}
+suicide_census_geo %>% 
+  select(State_Abbr.x, Median_Household_Income) %>%  
+  group_by(State_Abbr.x) %>% 
+  summarise(Median_Household_Income = mean(Median_Household_Income)) %>% 
+  arrange(desc(Median_Household_Income)) %>% 
+  top_n(3)
+```
+I notice that these are all east coast states that had lower average suicide rates in the map above.
+
+#### Does Average Suicide Rate Decline with Increasing Median Household Income?
+If there is a negative correlation between average suicide rate and median household income, then I would expect to see an inverse relationship. Here I plot the proportional median household income (teal) next to the mean suicide rate(pink) for years 1995 - 2016.
+```{r}
+tab1$`Prop. Household Income` <- tab1$`Prop. Household Income` / max(tab1$`Prop. Household Income`)
+#tab1$State_Abbr.x = factor(tab1$State_Abbr.x, level = order.states)
+tab2 <- tab1 %>% pivot_longer(cols = c("Prop. Household Income", "Mean Suicide Rate"), names_to="Variable", values_to = "values")
+tab2 <- left_join(order.states, tab2, by = c("State_Abbr.x"))
+ 
+tab2 %>% ggplot(aes(x = fct_inorder(State_Abbr.x), y = values, fill = Variable)) +
+  geom_col(position = "dodge") + 
+  labs(y = "Proportion", x = "State") + 
+  ggtitle("1995 - 2016: Average Suicide Rates Tend to Decline with \nIncreasing Median Household Income") + 
+  theme_minimal()
+```
+**Comment**: Yes, it appears there is a clear negative correlation between average suicide rate and the median household income. It's apparent that the top 10 states with the highest average suicide rates also have the lowest median household incomes and also happen to be Southern states with the exception of Wyoming:
+```{r}
+top.states
+```
+The list above are the 10 states with the lowest household income and highest suicide rates. 
+
+### Average Poverty Rate
+
+#### Is the relationship between low income and average suicide rate recapitulated when we look at average poverty rate?
+
+First, convert poverty rate from a percentage to a decimal:
+```{r}
+suicide_census_geo$All_Ages_Poverty_Rate <- suicide_census_geo$All_Ages_Poverty_Rate / 100
+```
+
+If the inverse relationship between suicide rate and household income is linked to poverty, then I would expect to see a positive correlation between suicide rate and average poverty rate.
+
+```{r}
+suicide_census_geo %>% select(Year, ave_sr, All_Ages_Poverty_Rate, State_Abbr.x) %>%
+  na.omit() %>% 
+  ggplot() +
+  geom_point(aes(x = as.numeric(All_Ages_Poverty_Rate), y = ave_sr), col = "darkgrey") +
+  geom_smooth(aes(x = as.numeric(All_Ages_Poverty_Rate), y = ave_sr),method = "lm", col = "black") +
+  labs(x = "Average Poverty Rate, All Ages", y = "Average Suicide Rate") +
+  ggtitle("Positive Correlation Between Suicide and Poverty Rates in All States, 1995 - 2016") + 
+  theme_minimal()
+```
+
+**Comment**: There appears to be a moderately strong positive correlation between average suicide rate and average poverty rate across all states and all years in the dataset.
+
+
+I next need to aggregate across all of the years by state to find the mean poverty rate and mean  suicide rate (average of males and females).
+
+```{r}
+tab3 <- suicide_census_geo %>% select(ave_sr, All_Ages_Poverty_Rate, State_Abbr.x) %>%
+  na.omit() %>% group_by(State_Abbr.x) %>% 
+  summarise(`Mean Poverty Rate` = mean(All_Ages_Poverty_Rate), `Mean Suicide Rate` = mean(ave_sr)) %>%
+  arrange(desc(`Mean Suicide Rate`))
+head(tab3)
+
+top.states2 <- tab3  %>% top_n(10) %>% select(State_Abbr.x)
+order.states2 <- tab3 %>% select(State_Abbr.x)
+```
+
+Next I performed a similar analysis to look the statewide trends in average suicide and poverty rates.
+
+```{r}
+tab4 <- tab3 %>% pivot_longer(cols = c("Mean Poverty Rate", "Mean Suicide Rate"), names_to="Variable", values_to = "values")
+tab4 <- left_join(order.states, tab4, by = c("State_Abbr.x"))
+ 
+tab4 %>% ggplot(aes(x = fct_inorder(State_Abbr.x), y = values, fill = Variable)) +
+  geom_col(position = "dodge") + 
+  labs(y = "Proportion", x = "State") + 
+  ggtitle("1995 - 2016: Average Suicide Rates Are Largely Stable with \nDecreasing Poverty Rate") + 
+  theme_minimal()
+```
+**Comment**: As opposed to Median Household Income, across the states the correlation is now less obvious. Although there may be a slight trend such that as suicide rate declines (teal), mean poverty rate also declines (pink), it is not as pronounced a trend as was seen with median household income. 
+
+#CONCLUSION
+Geographically the data shows there were more gun related suicides in the south east, and fewer in the northeast. There is a clear pattern that for the most part firearm related suicide rates have been largely steady overtime, although for females there was a more noticeable decline between 1995-2005. This may suggest some cause for the leveling out of suicide rates for females over time. Firearm related suicides are notably lower for females then they are for their male counterparts. One possible explanation for the higher suicide rates in some states that I explored in my analysis is lower income and poverty. Whereas a clear negative relationship was seen between average suicide rates and increasing income, it is less clear what the relationship might be between suicide and poverty across all states. 
+
+Future work in this realm could include information regarding mental health statistics, and treatments, as well as public funding for suicide prevention programs.
+
+## Sources 
+
+https://developers.google.com/public-data/docs/canonical/states_csv
+
+https://api.census.gov/data/timeseries/poverty/saipe
+
+https://www.rand.org/research/gun-policy/analysis/essays/firearm-availability-suicide.html
