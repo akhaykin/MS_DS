@@ -1,0 +1,144 @@
+place, pop2023 ,growthRate,area,country,cca3,cca2,ccn3,region,subregion,unMember,officialName,landAreaKm,density,densityMi,Rank,UnitedStatesAllies2023
+
+484," 128,455,567 ",0.00746,1964375,Mexico,MEX,MX,484,North America,"Central America, Latin America",TRUE,United Mexican States,1943950,66.0797,171.1463,10,Ally
+
+392," 123,294,513 ",-0.0053,377930,Japan,JPN,JP,392,Asia,Eastern Asia,TRUE,Japan,364500,338.2566,876.0845,12,Ally
+
+608," 117,337,368 ",0.01539,342353,Philippines,PHL,PH,608,Asia,South-Eastern Asia,TRUE,Republic of the Philippines,298170,393.5251,1019.2299,13,Ally
+
+792," 85,816,199 ",0.00557,783562,Turkey,TUR,TR,792,Asia,"Western Asia, The Middle East",TRUE,Republic of Turkey,783562,109.5206,283.6584,18,Ally
+
+276," 83,294,633 ",-0.0009,357114,Germany,DEU,DE,276,Europe,Western Europe,TRUE,Federal Republic of Germany,349390,238.4002,617.4564,19,Ally
+
+826," 67,736,802 ",0.00338,242900,United Kingdom,GBR,GB,826,Europe,Northern Europe,TRUE,United Kingdom of Great Britain and Northern Ireland,241930,279.9851,725.1615,21,Ally
+
+250," 64,756,584 ",0.00201,551695,France,FRA,FR,250,Europe,Western Europe,TRUE,French Republic,547557,118.2646,306.3052,23,Ally
+
+380," 58,870,762 ",-0.00282,301336,Italy,ITA,IT,380,Europe,Southern Europe,TRUE,Italian Republic,295717,199.078,515.6121,25,Ally
+
+404," 55,100,586 ",0.01986,580367,Kenya,KEN,KE,404,Africa,"Eastern Africa, Sub-Saharan Africa",TRUE,Republic of Kenya,569140,96.8138,250.7477,26,Ally
+
+410," 51,784,059 ",-0.00061,100210,South Korea,KOR,KR,410,Asia,Eastern Asia,TRUE,Republic of Korea,97600,530.5744,1374.1876,29,Ally
+
+724," 47,519,628 ",-0.00082,505992,Spain,ESP,ES,724,Europe,Southern Europe,TRUE,Kingdom of Spain,499556.6,95.1236,246.3702,32,Ally
+
+616," 41,026,067 ",0.02933,312679,Poland,POL,PL,616,Europe,Eastern Europe,TRUE,Republic of Poland,306130,134.0152,347.0993,37,Ally
+
+124," 38,781,291 ",0.0085,9984670,Canada,CAN,CA,124,North America,Northern America,TRUE,Canada,8965590,4.3256,11.2032,38,Ally
+
+682," 36,947,025 ",0.01478,2149690,Saudi Arabia,SAU,SA,682,Asia,"Western Asia, The Middle East",TRUE,Kingdom of Saudi Arabia,2149690,17.1871,44.5147,40,Ally
+
+804," 36,744,634 ",-0.07448,603500,Ukraine,UKR,UA,804,Europe,Eastern Europe,TRUE,Ukraine,579400,63.4184,164.2537,41,Ally
+
+458," 34,308,525 ",0.01091,330803,Malaysia,MYS,MY,458,Asia,South-Eastern Asia,TRUE,Malaysia,328550,104.4241,270.4583,46,Ally
+
+36," 26,439,111 ",0.01,7692024,Australia,AUS,AU,36,Oceania,Australia and New Zealand,TRUE,Commonwealth of Australia,7692020,3.4372,8.9024,55,Ally
+
+642," 19,892,812 ",0.01188,238391,Romania,ROU,RO,642,Europe,Eastern Europe,TRUE,Romania,230080,86.4604,223.9325,64,Ally
+
+528," 17,618,299 ",0.00309,41850,Netherlands,NLD,NL,528,Europe,Western Europe,TRUE,Netherlands,33670,523.264,1355.2538,72,Ally
+
+56," 11,686,140 ",0.00259,30528,Belgium,BEL,BE,56,Europe,Western Europe,TRUE,Kingdom of Belgium,30280,385.9359,999.5741,82,Ally
+
+203," 10,495,295 ",0.00013,78865,Czech Republic,CZE,CZ,203,Europe,Eastern Europe,TRUE,Czech Republic,77198.5,135.9521,352.1158,89,Ally
+
+300," 10,341,277 ",-0.00421,131990,Greece,GRC,GR,300,Europe,Southern Europe,TRUE,Hellenic Republic,128900,80.2271,207.7883,91,Ally
+
+620," 10,247,605 ",-0.00227,92090,Portugal,PRT,PT,620,Europe,Southern Europe,TRUE,Portuguese Republic,91605.6,111.8666,289.7344,93,Ally
+
+348," 10,156,239 ",0.01896,93028,Hungary,HUN,HU,348,Europe,Eastern Europe,TRUE,Hungary,91260,111.2891,288.2386,94,Ally
+
+376," 9,174,520 ",0.01507,20770,Israel,ISR,IL,376,Asia,"Western Asia, The Middle East",TRUE,State of Israel,21640,423.9612,1098.0595,98,Ally
+
+40," 8,958,960 ",0.00216,83871,Austria,AUT,AT,40,Europe,Western Europe,TRUE,Republic of Austria,82520,108.5671,281.1889,100,Ally
+
+100," 6,687,717 ",-0.0139,110879,Bulgaria,BGR,BG,100,Europe,Eastern Europe,TRUE,Republic of Bulgaria,108560,61.6039,159.554,110,Ally
+
+702," 6,014,723 ",0.00653,710,Singapore,SGP,SG,702,Asia,South-Eastern Asia,TRUE,Republic of Singapore,718,8377.0515,21696.5635,114,Ally
+
+208," 5,910,913 ",0.00487,43094,Denmark,DNK,DK,208,Europe,Northern Europe,TRUE,Kingdom of Denmark,40000,147.7728,382.7316,115,Ally
+
+703," 5,795,199 ",0.02689,49037,Slovakia,SVK,SK,703,Europe,Eastern Europe,TRUE,Slovak Republic,49035,118.1849,306.099,116,Ally
+
+246," 5,545,475 ",0.00085,338424,Finland,FIN,FI,246,Europe,Northern Europe,TRUE,Republic of Finland,303940,18.2453,47.2553,118,Ally
+
+578," 5,474,360 ",0.00737,323802,Norway,NOR,NO,578,Europe,Northern Europe,TRUE,Kingdom of Norway,364285,15.0277,38.9217,119,Ally
+
+554," 5,228,100 ",0.00826,270467,New Zealand,NZL,NZ,554,Oceania,Australia and New Zealand,TRUE,New Zealand,263310,19.8553,51.4252,123,Ally
+
+188," 5,212,173 ",0.00605,51100,Costa Rica,CRI,CR,188,North America,"Central America, Latin America",TRUE,Republic of Costa Rica,51060,102.0794,264.3856,124,Ally
+
+372," 5,056,935 ",0.00673,70273,Ireland,IRL,IE,372,Europe,Northern Europe,TRUE,Ireland,68890,73.4059,190.1214,125,Ally
+
+191," 4,008,617 ",-0.00539,56594,Croatia,HRV,HR,191,Europe,Southern Europe,TRUE,Republic of Croatia,55960,71.6336,185.5311,130,Ally
+
+630," 3,260,314 ",0.00243,8870,Puerto Rico,PRI,PR,630,North America,Caribbean,FALSE,Commonwealth of Puerto Rico,8870,367.5664,951.997,136,Ally
+
+8," 2,832,439 ",-0.00348,28748,Albania,ALB,AL,8,Europe,Southern Europe,TRUE,Republic of Albania,27400,103.3737,267.7378,138,Ally
+
+440," 2,718,352 ",-0.01153,65300,Lithuania,LTU,LT,440,Europe,Northern Europe,TRUE,Republic of Lithuania,62620,43.4103,112.4326,142,Ally
+
+705," 2,119,675 ",-0.00008,20273,Slovenia,SVN,SI,705,Europe,Southern Europe,TRUE,Republic of Slovenia,20136.4,105.2658,272.6385,149,Ally
+
+807," 2,085,679 ",-0.00378,25713,North Macedonia,MKD,MK,807,Europe,Southern Europe,TRUE,Republic of North Macedonia,25220,82.6994,214.1915,150,Ally
+
+428," 1,830,211 ",-0.01105,64559,Latvia,LVA,LV,428,Europe,Northern Europe,TRUE,Republic of Latvia,62230,29.4104,76.173,151,Ally
+
+233," 1,322,765 ",-0.00249,45227,Estonia,EST,EE,233,Europe,Northern Europe,TRUE,Republic of Estonia,42750,30.9419,80.1394,156,Ally
+
+638," 981,796 ",0.00795,2511,Reunion,REU,RE,638,Africa,"Eastern Africa, Sub-Saharan Africa",FALSE,Réunion Island,2512,390.8424,1012.2817,161,Ally
+
+242," 936,375 ",0.00711,18272,Fiji,FJI,FJ,242,Oceania,Melanesia,TRUE,Republic of Fiji,18270,51.2521,132.7428,162,Ally
+
+90," 740,424 ",0.0223,28896,Solomon Islands,SLB,SB,90,Oceania,Melanesia,TRUE,Solomon Islands,27990,26.4532,68.5137,166,Ally
+
+442," 654,768 ",0.01107,2586,Luxembourg,LUX,LU,442,Europe,Western Europe,TRUE,Grand Duchy of Luxembourg,2574.5,254.3282,658.7101,168,Ally
+
+499," 626,485 ",-0.00095,13812,Montenegro,MNE,ME,499,Europe,Southern Europe,TRUE,Montenegro,13450,46.5788,120.6391,169,Ally
+
+352," 375,318 ",0.00649,103000,Iceland,ISL,IS,352,Europe,Northern Europe,TRUE,Iceland,100830,3.7223,9.6407,179,Ally
+
+254," 312,155 ",0.02495,83534,French Guiana,GUF,GF,254,South America,"South America, Latin America",FALSE,Guiana,83534,3.7369,9.6785,183,Ally
+
+258," 308,872 ",0.00847,4167,French Polynesia,PYF,PF,258,Oceania,Polynesia,FALSE,French Polynesia,3471,88.9865,230.4749,184,Ally
+
+540," 292,991 ",0.01049,18575,New Caledonia,NCL,NC,540,Oceania,Melanesia,FALSE,New Caledonia,18280,16.028,41.5124,185,Ally
+
+531," 192,077 ",0.00478,444,Curacao,CUW,CW,531,North America,Caribbean,FALSE,Country of Curaçao,444,432.6059,1120.4492,189,Ally
+
+583," 115,224 ",0.00929,702,Micronesia,FSM,FM,583,Oceania,Micronesia,TRUE,Federated States of Micronesia,700,164.6057,426.3288,194,Ally
+
+832," 111,802 ",0.00924,116,Jersey,JEY,JE,832,Europe,"Northern Europe, Sub-Saharan Africa",FALSE,Bailiwick of Jersey,120,931.6833,2413.0598,195,Ally
+
+850," 98,750 ",-0.00719,347,United States Virgin Islands,VIR,VI,850,North America,Caribbean,FALSE,Virgin Islands of the United States,347,284.5821,737.0677,200,Ally
+
+833," 84,710 ",0.00226,572,Isle of Man,IMN,IM,833,Europe,Northern Europe,FALSE,Isle of Man,570,148.614,384.9104,202,Ally
+
+136," 69,310 ",0.00879,264,Cayman Islands,CYM,KY,136,North America,Caribbean,FALSE,Cayman Islands,240,288.7917,747.9704,205,Ally
+
+60," 64,069 ",-0.00179,54,Bermuda,BMU,BM,60,North America,Northern America,FALSE,Bermuda,54,1186.463,3072.9391,206,Ally
+
+831," 63,544 ",0.00384,78,Guernsey,GGY,GG,831,Europe,Northern Europe,FALSE,Bailiwick of Guernsey,63,1008.6349,2612.3644,207,Ally
+
+304," 56,643 ",0.00314,2166086,Greenland,GRL,GL,304,North America,Northern America,FALSE,Greenland,410450,0.138,0.3574,208,Ally
+
+234," 53,270 ",0.00339,1393,Faroe Islands,FRO,FO,234,Europe,Northern Europe,FALSE,Faroe Islands,1366,38.9971,101.0024,209,Ally
+
+580," 49,796 ",0.00494,464,Northern Mariana Islands,MNP,MP,580,Oceania,Micronesia,FALSE,Commonwealth of the Northern Mariana Islands,460,108.2522,280.3731,210,Ally
+
+16," 43,914 ",-0.00811,199,American Samoa,ASM,AS,16,Oceania,Polynesia,FALSE,American Samoa,200,219.57,568.6863,214,Ally
+
+292, 32688.000000000004 ,0.0012,6.8,Gibraltar,GIB,GI,292,Europe,Southern Europe,FALSE,Gibraltar,6.8,4807.0588,12450.2824,219,Ally
+
+92," 31,538 ",0.00744,151,British Virgin Islands,VGB,VG,92,North America,Caribbean,FALSE,Virgin Islands,150,210.2533,544.5561,221,Ally
+
+184," 17,044 ",0.00194,240,Cook Islands,COK,CK,184,Oceania,Polynesia,FALSE,Cook Islands,240,71.0167,183.9332,223,Ally
+
+660," 15,899 ",0.00265,91,Anguilla,AIA,AI,660,North America,Caribbean,FALSE,Anguilla,91,174.7143,452.51,224,Ally
+
+876," 11,502 ",-0.00605,274,Wallis and Futuna,WLF,WF,876,Oceania,Polynesia,FALSE,Territory of the Wallis and Futuna Islands,274,41.9781,108.7233,226,Ally
+
+238," 3,791 ",0.00291,12173,Falkland Islands,FLK,FK,238,South America,"South America, Latin America",FALSE,Falkland Islands,12173,0.3114,0.8066,231,Ally
+
+570," 1,935 ",0.00052,261,Niue,NIU,NU,570,Oceania,Polynesia,FALSE,Niue,261,7.4138,19.2017,232,Ally
+

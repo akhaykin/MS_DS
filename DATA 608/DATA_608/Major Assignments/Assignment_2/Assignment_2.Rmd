@@ -1,0 +1,150 @@
+---
+title: "Assignment_2"
+author: "Alex Khaykin"
+output: html_document
+date: "2023-09-20"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Loading Libraries
+
+```{r,warning=FALSE, error=FALSE, echo=FALSE}
+library(devtools)
+#install_github("mikeasilva/blsAPI")
+library(rjson)
+library(blsAPI)
+library(dplyr)
+library(tidyverse)
+library(lubridate)
+```
+
+### INTRODUCTION 
+Inflation is the term used to describe the drop of a currency's purchasing power over time. As such, one unit of currency buys less than it did before inflationary pressures hit the economy.Economic theory suggests that the rate of inflation rises as unemployment rates fall.Inflation and unemployment have traditionally had an inverse relationship. When one rises, the other drops and vice versa. Governments typically rely on monetary and fiscal policies in order to keep the economy from overstimulating or from slowing it down too much.Monetary policy is enacted when a central bank wants to promote growth by controlling the money supply. More money is injected into the economy by lowering interest rates and printing more currency to spur growth. Rates increase when central banks want to slow down growth.Low levels of unemployment typically corresponded with higher inflation, while high unemployment corresponded with lower inflation and even deflation. This analysis will focus on the question, "Has the FED been able to fulfill the mandate given to it by Congress?"
+
+### Data Aqcuisition
+
+#### Using the Bureau of Labor Statistics API 
+I used this API to pull down seasonally adjusted unemployment rates and consumer price indices for the 25 year period from 1997 to 2022. I had to register with the BLS and then install their API package fro GITHUB using the install_github() function from __devtools__. I then used my API key with the series ids that I found for unemployment rates(LNS14000000) and CPI(CUSR0000SA0). The API only allows to pull 20 years of data at a time, so I pulled down data from 1997 to 2016 first, followed by data from 2017 to 2022. Finally I combined the data sets together.
+
+```{r,warning=FALSE, error=FALSE, echo=FALSE}
+# running the initial 20 years
+payload <- list(
+  'seriesid'=c('LNS14000000','CUSR0000SA0'),
+  'startyear'=1997,
+  'endyear'=2016,
+  'catalog'=FALSE,
+  'calculations'=TRUE,
+  'annualaverage'=TRUE,
+  'registrationKey'='69e9046ac85d420b82937e45306f0893')
+data_1997_2016 <- blsAPI(payload, 2, TRUE)
+#running the final five years
+payload <- list(
+  'seriesid'=c('LNS14000000','CUSR0000SA0'),
+  'startyear'=2017,
+  'endyear'=2022,
+  'catalog'=FALSE,
+  'calculations'=TRUE,
+  'annualaverage'=TRUE,
+  'registrationKey'='69e9046ac85d420b82937e45306f0893')
+data_2017_2022 <- blsAPI(payload, 2, TRUE)
+
+#to combine the two API datasets
+data_1997_2022 <- rbind(data_1997_2016, data_2017_2022)
+```
+
+#### Importing FEDFUNDS from CSV
+I could not readily find and API for the FRED so I downloaded the FEDFUNDS data from [here.](https://fred.stlouisfed.org/series/FEDFUNDS)
+
+```{r}
+FED <- read.csv("~/DATA_SCIENCE/DATA_608/Major Assignments/Assignment_2/DATA/FEDFUNDS.csv")
+```
+
+#### Data Cleanup and Wrangling to merge
+1. To convert Year to a date type and Value to a numeric data types
+```{r}
+#data_1997_2022$year <- as.Date(data_1997_2022$year, format = "%Y")
+data_1997_2022$year <- as.numeric(data_1997_2022$year)
+data_1997_2022$value <- as.numeric(data_1997_2022$value)
+```
+
+2. To seperate the unemployment and CPI data
+```{r}
+UNEMP <- data_1997_2022 %>% 
+  filter(seriesID=="LNS14000000") %>% 
+  mutate(unemployment=value) %>% 
+  select(-value) 
+CPI <- data_1997_2022 %>% 
+  filter(seriesID=="CUSR0000SA0") %>% 
+  mutate(CPI=value) %>% 
+  select(-value)
+```
+
+3. To extract year and month into separate columns in the FEDFUNDS data
+```{r}
+FED <- FED %>% 
+  mutate(DATE=as.Date(DATE, format="%m/%d/%Y")) %>% 
+  mutate(year=year(DATE), month=month(DATE))
+```
+
+4. To merge the datasets
+```{r}
+#merging CPI and unemployment
+df <- full_join(CPI, UNEMP, by=c("year", "periodName")) %>% 
+  select(-seriesID.x, -seriesID.y, -period.x, -period.y)
+#converting period name to numeric month
+df <- df %>% 
+  mutate(month=case_when(periodName=="January"~1,
+                         periodName=="February"~2,
+                         periodName=="March"~3,
+                         periodName=="April"~4,
+                         periodName=="May"~5,
+                         periodName=="June"~6,
+                         periodName=="July"~7,
+                         periodName=="August"~8,
+                         periodName=="September"~9,
+                         periodName=="October"~10,
+                         periodName=="November"~11,
+                         periodName=="December"~12,
+                         .default=NA))
+#merging with fedfunds
+df <- left_join(df, FED, by=c("year","month")) %>% 
+  select(-DATE)
+```
+
+### Has the FED been able to fulfill the mandate given to it by Congress?
+
+#### To calculate the average annual value for each of the three measures
+
+```{r}
+df2 <- df %>% 
+  group_by(year) %>% 
+  summarise(avg_UNEMP=mean(unemployment, na.rm = TRUE), avg_CPI=mean(CPI, na.rm = TRUE), avg_FEDFUNDS=mean(FEDFUNDS, na.rm = TRUE))
+
+head(df2)
+```
+
+#### Uisng Performance Analytics and chart.Correlatio() function to pairwise relationships
+
+```{r}
+library(PerformanceAnalytics)
+chart.Correlation(df2[,c(2,3,4)], histogram = TRUE, method = "pearson")
+```
+
+#### Using base R and the plot() function to show the three measures over time
+
+```{r}
+plot(df2$avg_UNEMP~df2$year, xlab="Year", ylab="Average Annual Annual Unemployment Rate", pch=19, col="red", type="b", main="Average Annual Unemployment Rate, 1997-2022")
+```
+
+```{r}
+plot(df2$avg_CPI~df2$year, xlab="Year", ylab="Average Annual CPI", pch=19, col="green", type="b", main="Average Annual CPI, 1997-2022")
+```
+
+```{r}
+plot(df2$avg_FEDFUNDS~df2$year, xlab="Year", ylab="Average Annual Fed Rate", pch=19, col="purple", type="b", main="Average Annual Federal Reserve Rate, 1997-2022")
+```
+### CONCLUSION
+According to my estimation the CPI is but one reflection of the inflation or the currency devaluation rate. The fed reserve is fulfilling its obligation mandated by congress, to manipulate the currently and maintain steady levels of employment. However, delving deeper one may ask is a central banks power to manipulate the currency by inflating its way out of debt a good idea? I believe the answer is no, because I believe modern monetary theory is inherently wrong on its face. Unless the wages rise at the same rate or faster than inflation, cost of living for lower and middle class citizens becomes unsustainable. 
