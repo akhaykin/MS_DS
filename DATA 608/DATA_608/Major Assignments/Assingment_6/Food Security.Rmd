@@ -1,0 +1,62 @@
+---
+title: "Food Security"
+author: "Alex Khaykin"
+date: "2023-11-15"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+```
+
+#### Annual Trends in Food Security and SNAP / Food Stamp Benefits in the US
+Sources:
+* **ANNUAL FOOD INSECURITY AS PERCENT OF U.S. HOUSEHOLDS** - [USDA](https://www.ers.usda.gov/topics/food-nutrition-assistance/food-security-in-the-u-s/key-statistics-graphics/#map), Economic Research Service, using data from U.S. Department of
+Commerce, Bureau of the Census, Current Population Survey Food Security Supplements
+* **ANNUAL SNAP BENEFITS AS PERCENT OF U.S. HOUSEHOLDS** - [USDA](https://www.fns.usda.gov/pd/supplemental-nutrition-assistance-program-snap) - Food and Nutrition Service, using the SNAP Data Tables
+* **U.S. HOUSEHOLD COUNTS** came from the [St. Louis Fed](https://fred.stlouisfed.org/series/TTLHH) - Provided 
+
+```{r}
+food_sec <- read_excel("C:\\Users\\akhay\\OneDrive\\Documents\\DATA_SCIENCE\\DATA_608\\Major Assignments\\Assingment_6\\DATA\\Annual_Trends_Food_Security_SNAP.xlsx")
+food_sec <- food_sec %>% 
+  mutate(`Percent SNAP Participation` = `Percent SNAP Participation` * 100) %>% 
+  rename("SNAP Participation" = `Percent SNAP Participation`, "Very High Food Insecurity" = `Very low food security`)
+```
+
+```{r}
+food_sec %>% 
+  select(c(1:3, 6)) %>% 
+  pivot_longer(!1, values_to = "perc_households", names_to = "measure") %>% 
+  ggplot(aes(x = Year, y = perc_households, fill = measure, color = measure)) +
+  geom_line(size = 2) +
+  labs(y = "% of US Households", title = "Food Insecurity and SNAP Benefit Participation in US from 2001 - 2022", color = "Households Reporting")
+```
+
+#### At the state and/or regional level, is there a difference in the breakdown in food security with poverty & (anything else?)
+
+```{r}
+MMG <- read_excel("C:\\Users\\akhay\\OneDrive\\Documents\\DATA_SCIENCE\\DATA_608\\Major Assignments\\Assingment_6\\DATA\\MMG2023_2019-2021_Data_ToShare.xlsx", sheet = 4)
+```
+
+```{r}
+MMG %>% 
+  select(c(3, 22, 26)) %>% 
+  pivot_longer(!1, values_to = "Rate", names_to = "Measure") %>% 
+  mutate(Measure = ifelse(Measure=="Child Food Insecurity Rate", "Child", "Mature Adult 50-59y")) %>% 
+  ggplot(aes(x = State, y = Rate, fill = Measure)) +
+  geom_col() +
+  labs(y = "Rate of Food Insecurity", title = "Rate of Food Insecurity for Children vs Mature Adults, 2019") + 
+  theme(legend.position = "bottom", legend.title = element_blank(), axis.text.x = element_text(angle = 90, vjust = 0, hjust = 0))
+```
+
+
+#### Children --> adults? what do we expect?

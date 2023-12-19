@@ -1,0 +1,9 @@
+https://www.ncei.noaa.gov/access/monitoring/tornadoes/time-series/ytd/12?mean=true - Totrnadoes Count
+
+https://www.epa.gov/climate-indicators/climate-change-indicators-tropical-cyclone-activity - Hurricane Counts
+
+https://www.spc.noaa.gov/wcm/ - Tornado Intensity
+
+https://www.aoml.noaa.gov/hrd/hurdat/All_U.S._Hurricanes.html - Hurricane Intensity
+
+https://crt-climate-explorer.nemac.org/climate_graphs/?county=New+York+County&city=New+York%2C+NY&fips=36061&lat=40.7127753&lon=-74.0059728 - Average NYC Temp over time
