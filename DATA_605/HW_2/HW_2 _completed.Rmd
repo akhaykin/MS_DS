@@ -1,0 +1,87 @@
+---
+title: "Data_605_HW_2"
+Author: "Alex KhaYKIN"
+output: html_document
+date: "2024-02-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1A.
+Proof that $A^TA \neq AA^T$
+
+```{r}
+A <- matrix(seq(from=1,to=9), nrow=3, ncol=3, byrow=T)
+A_T <- t(A)
+A
+A_T
+```
+```{r}
+A%*%A_T
+```
+```{r}
+A_T%*%A
+```
+The matrices do not appear equal, the final test:
+```{r}
+A%*%A_T == A_T%*%A
+```
+Therefore $A^TA \neq AA^T$.
+
+1B. Proof that $A^TA = AA^T$. T
+The identity matrix is a symmetric matrix with 1s on the diagnal and zero everywhere else. 
+
+```{r}
+identity <- diag(3)
+identity
+```
+Transpose identity matrix.
+
+```{r}
+transpose_i <- t(identity)
+transpose_i
+```
+
+```{r}
+identity %*% transpose_i == transpose_i %*% identity
+```
+Proof, that $A^TA = AA^T$
+The transpose of the identity matrix or any symmetric matrix is the matrix itself.
+
+2.
+
+```{r}
+# Set the desired number of rows and columns
+N <- 5
+M <- 5
+
+# Create an N by M matrix of independent normal random variables
+random_matrix <- matrix(round(runif(N * M, min = 1, max = 16), 0), nrow = N)
+
+# View the generated matrix
+print(random_matrix)
+```
+Writing an LU matrix factorization function. Reducing each row by an elimination amount to create an L matrix that started as an identity matrix and is used here to record the row operations performed on the U matrix.
+
+
+```{r}
+# LU factorization function
+lu_factorization <- function(A) {
+  n <- nrow(A)
+  L <- diag(n)  # Initialize L as an identity matrix
+  U <- A
+  
+  for (r in 1:n) {
+      elim <- -U[r, r]/U[r,]
+      
+      U[r,] <- U[r,] + elim * U[r,]
+      L[r,] <- elim
+  }
+
+  return(list(L = L, U = U))
+}
+lu_factorization(random_matrix)
+```
+The resulting L matrix has 1s on the diagnal and all other values record the elimination steps performed on U.
