@@ -1,0 +1,200 @@
+---
+title: "Data 605 HW_5"
+Author: Alex Khaykin
+output: html_document
+date: "2024-02-24"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Problem #1
+
+```{r}
+
+options(scipen = 999)
+# Given data
+prevalence_rate <- 0.001  # Prevalence rate (0.1%)
+sensitivity <- 0.96       # Sensitivity (96%)
+specificity <- 0.98       # Specificity (98%)
+
+# Calculate probability of having the disease given a positive test result
+P_D_given_T <- round(((sensitivity * prevalence_rate) / ((sensitivity * prevalence_rate) + (1 - specificity) * (1 - prevalence_rate))) * 100, 2)
+
+# Print the result
+cat("Probability of having the disease given a positive test result:", P_D_given_T, "%\n")
+
+# Calculate total first-year cost for treating 100,000 individuals
+num_individuals <- 100000
+cost_per_positive_case <- 100000  # Median cost per positive case
+total_cost <- num_individuals * cost_per_positive_case
+
+# Print the total cost
+cat("Total first-year cost for treating 100,000 individuals:", total_cost, "\n")
+
+# Test cost
+test_cost <- num_individuals * 1000  # Cost per test administration
+
+# Print the test cost
+cat("Test cost for 100,000 individuals:", test_cost, "\n")
+
+# Overall first-year cost
+overall_cost <- total_cost + test_cost
+
+# Print the overall cost
+cat("Overall first-year cost:", overall_cost, "\n")
+```
+
+Problem #2
+
+```{r}
+# Given data
+n <- 24       # Number of months
+p <- 0.05     # Probability of receiving an inspection in any given month
+
+# Probability of exactly 2 inspections
+prob_2_inspections <- choose(n, 2) * p^2 * (1 - p)^(n - 2)
+prob_2_inspections_rounded <- round((prob_2_inspections)*100, 2)
+
+# Probability of 2 or more inspections
+prob_2_or_more_inspections <- 1 - (dbinom(0, n, p) + dbinom(1, n, p))
+prob_2_or_more_inspections_rounded <- round((prob_2_or_more_inspections)*100, 2)
+
+# Probability of fewer than 2 inspections
+prob_fewer_than_2_inspections <- pnbinom(1, size = n, prob = p)
+prob_fewer_than_2_inspections_rounded <- round((prob_fewer_than_2_inspections)*100, 2)
+
+# Expected number of inspections
+expected_inspections <- n * p
+
+# Standard deviation
+standard_deviation <- sqrt(n * p * (1 - p))
+
+# Print the results
+cat("Probability of exactly 2 inspections:", prob_2_inspections_rounded, "%\n")
+cat("Probability of 2 or more inspections:", prob_2_or_more_inspections_rounded, "%\n")
+cat("Probability of fewer than 2 inspections:", prob_fewer_than_2_inspections_rounded, "%\n")
+cat("Expected number of inspections:", expected_inspections, "\n")
+cat("Standard deviation:", standard_deviation, "\n")
+```
+Problem #3
+
+```{r}
+# Given data
+lambda <- 10  # Average rate of arrivals per hour
+time_interval <- 8  # Time interval in hours
+
+# 1. Probability of exactly 3 arrivals
+prob_3_arrivals <- round((dpois(3, lambda)) * 100, 2)
+cat("Probability of exactly 3 arrivals in one hour:", prob_3_arrivals, "%\n")
+
+# 2. Probability of more than 10 arrivals
+prob_more_than_10 <- round((1 - ppois(10, lambda)) * 100, 2)
+cat("Probability of more than 10 arrivals in one hour:", prob_more_than_10, "%\n")
+
+# 3. Expected number of arrivals in 8 hours
+expected_arrivals <- lambda * time_interval
+cat("Expected number of arrivals in 8 hours:", expected_arrivals, "\n")
+
+# 4. Standard deviation
+standard_deviation <- sqrt(lambda * time_interval)
+cat("Standard deviation:", standard_deviation, "\n")
+```
+Problem #4
+
+```{r}
+# Given data
+N <- 30  # Total number of workers
+K <- 15  # Number of nurses
+n <- 6   # Number of trips
+k <- 5   # Number of nurses selected for trips
+
+# 1. Probability of selecting exactly 5 nurses
+prob_5_nurses <- round((choose(K, k) * choose(N - K, n - k) / choose(N, n)) * 100, 2)
+cat("Probability of selecting exactly 5 nurses:", prob_5_nurses, "%\n")
+
+# 2. Expected number of nurses selected
+expected_nurses <- n * (K / N)
+cat("Expected number of nurses selected:", expected_nurses, "\n")
+
+# 3. Expected number of non-nurses selected
+expected_non_nurses <- n * ((N - K) / N)
+cat("Expected number of non-nurses selected:", expected_non_nurses, "\n")
+```
+Problem #5
+
+```{r}
+# Given data
+p <- 0.001  # Probability of injury per hour
+total_hours_year <- 1200  # Total hours in a year
+total_hours_15_months <- 3120  # Total hours in 15 months
+hours_before_injury <- 1000  # Expected hours before injury
+
+
+# Calculate probabilities
+prob_injury_year <- round((1 - (1 - p) ^ total_hours_year) * 100, 2)
+prob_injury_15_months <- round((1 - (1 - p) ^ total_hours_15_months) * 100, 2)
+prob_injury_next_100_hours <- round((1 - (1 - p) ^ 100) * 100, 2)
+
+# Print results
+cat("Probability of injury in a year:", prob_injury_year, "%\n")
+cat("Probability of injury in 15 months:", prob_injury_15_months, "%\n")
+cat("Expected hours before injury:", hours_before_injury, "\n")
+cat("Probability of injury in the next 100 hours:", prob_injury_next_100_hours, "%\n")
+```
+Problem #6
+
+```{r}
+# Probability of failing more than twice
+prob_more_than_twice <- round((1 - (1 - (1/1000))^2) * 100, 2)
+
+# Expected value (mean number of failures)
+expected_value <- 1000
+
+# Print the results
+cat("Probability of failing more than twice:", prob_more_than_twice, "%\n")
+cat("Expected value (mean number of failures):", expected_value, "\n")
+```
+Problem #7
+
+```{r}
+# Probability of waiting more than 10 minutes
+prob_more_than_10 <- round(((30 - 10) / 30)*100,2)
+
+# Probability of waiting at least another 5 minutes after 10 minutes
+prob_at_least_5_after_10 <- round(((30 - 15) / 30) * 100,2)
+
+# Expected waiting time
+expected_waiting_time <- (0 + 30) / 2
+
+# Print the results
+cat("Probability of waiting more than 10 minutes:", prob_more_than_10, "%\n")
+cat("Probability of waiting at least another 5 minutes after 10 minutes:", prob_at_least_5_after_10, "%\n")
+cat("Expected waiting time:", expected_waiting_time, "minutes\n")
+```
+
+Problem #8
+
+```{r}
+# Given manufacturer's lifetime (expected value) of 10 years
+MTTF <- 10
+
+# Calculate the failure rate (λ)
+lambda <- 1 / MTTF
+
+# Probability of failure after 8 years
+prob_failure_8_years <- 1 - exp(-8 * lambda)
+
+# Probability of failure in the next 2 years (given 8 years ownership)
+prob_failure_next_2_years <- 1 - exp(-2 * lambda)
+
+# Round probabilities to two decimal places
+prob_failure_8_years_rounded <- round((prob_failure_8_years) * 100, 2)
+prob_failure_next_2_years_rounded <- round((prob_failure_next_2_years)*100, 2)
+
+# Print the results
+cat("Probability of failure after 8 years:", prob_failure_8_years_rounded, "%\n")
+cat("Probability of failure in the next 2 years (given 8 years ownership):", prob_failure_next_2_years_rounded, "%\n")
+```
+
