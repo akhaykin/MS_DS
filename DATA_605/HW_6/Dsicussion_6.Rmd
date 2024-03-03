@@ -1,0 +1,31 @@
+---
+title: "Data 605 Week_6 Discussion_6"
+author: "Alex Khaykin"
+output: html_document
+date: "2024-02-28"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Chapter 3 
+
+#2
+
+In how many ways can we choose five people from a group of ten to form a
+committee?
+ 
+```{r}
+# Calculate the number of ways to choose 5 members out of 10
+n <- 10
+r <- 5
+
+# Using the combination formula
+num_ways <- factorial(n) / (factorial(r) * factorial(n - r))
+
+# Print the result
+cat("Number of ways to form a committee:", num_ways, "\n")
+```
+
