@@ -1,0 +1,118 @@
+---
+title: "Data 605 HW_7"
+author: "Alex Khaykin"
+date: "2024-03-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#1 
+
+Let X1, X2, . . . , Xn be n mutually independent random variables, each of 
+which is uniformly distributed on the integers from 1 to k. Let Y denote the 
+minimum of the Xi’s. Find the distribution of Y .
+
+```{r}
+# Parameters
+n <- 10  # Number of random variables (change as needed)
+k <- 20  # Upper bound of the uniform distribution (change as needed)
+
+# CDF of Y
+CDF_Y <- function(y) {
+  if (y >= 1 && y <= k) {
+    return(1 - ((k - y) / k)^n)
+  } else {
+    return(0)
+  }
+}
+
+# PDF of Y
+PDF_Y <- function(y) {
+  if (y >= 1 && y <= k) {
+    return(n * (k - 1) / (k - y)^(n + 1))
+  } else {
+    return(0)
+  }
+}
+
+# Expected value of Y
+E_Y <- (k + n) / (n + 1)
+
+# Print results
+cat("Distribution of Y (Beta(1, n + 1)):\n")
+cat("CDF(Y <= y) =", CDF_Y(5), "\n")
+cat("PDF(y) =", PDF_Y(5), "\n")
+cat("E(Y) =", E_Y, "\n")
+```
+
+#2.  
+
+Your organization owns a copier (future lawyers, etc.) or MRI (future doctors).  
+This machine has a manufacturer’s expected lifetime of 10 years.  This means 
+that we expect one failure every ten years.  (Include the probability statements 
+and R Code for each part.). 
+
+a.  What is the probability that the machine will fail after 8 years?.  Provide also the 
+expected value and standard deviation.  Model as a geometric.  (Hint: the probability is 
+equivalent to not failing during the first 8 years..) 
+
+b.  What is the probability that the machine will fail after 8 years?.  Provide also the 
+expected value and standard deviation.  Model as an exponential.   
+
+c.  What is the probability that the machine will fail after 8 years?.  Provide also the 
+expected value and standard deviation.  Model as a binomial.  (Hint:  0 success in 8 
+years)   
+
+d.  What is the probability that the machine will fail after 8 years?.  Provide also the 
+expected value and standard deviation.  Model as a Poisson.  
+
+```{r}
+# Geometric Distribution
+p <- 1/10
+prob_geometric <- 1 - (1 - p)^8
+mean_geometric <- 1 / p
+sd_geometric <- sqrt((1 - p) / p^2)
+
+# Exponential Distribution
+lambda <- 1/10
+prob_exponential <- exp(-lambda * 8)
+mean_exponential <- 1 / lambda
+sd_exponential <- 1 / lambda
+
+# Binomial Distribution
+n <- 8
+prob_binomial <- (1 - p)^n
+mean_binomial <- n * p
+sd_binomial <- sqrt(n * p * (1 - p))
+
+# Poisson Distribution
+prob_poisson <- exp(-lambda * 8)
+mean_poisson <- lambda * 8
+sd_poisson <- sqrt(lambda * 8)
+
+# Print results
+cat("Geometric Distribution:\n")
+cat("P(X > 8) =", prob_geometric, "\n")
+cat("E(X) =", mean_geometric, "\n")
+cat("SD(X) =", sd_geometric, "\n\n")
+
+cat("Exponential Distribution:\n")
+cat("P(T > 8) =", prob_exponential, "\n")
+cat("E(T) =", mean_exponential, "\n")
+cat("SD(T) =", sd_exponential, "\n\n")
+
+cat("Binomial Distribution:\n")
+cat("P(X = 0) =", prob_binomial, "\n")
+cat("E(X) =", mean_binomial, "\n")
+cat("SD(X) =", sd_binomial, "\n\n")
+
+cat("Poisson Distribution:\n")
+cat("P(X = 0) =", prob_poisson, "\n")
+cat("E(X) =", mean_poisson, "\n")
+cat("SD(X) =", sd_poisson, "\n")
+```
+
