@@ -1,0 +1,96 @@
+---
+title: "Data_605 HW_8"
+author: "Alex Khaykin"
+date: "2024-03-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#11
+ A company buys 100 lightbulbs, each of which has an exponential lifetime of
+ 1000 hours. What is the expected time for the first of these bulbs to burn
+ out?
+
+```{r}
+# Given mean lifetime (average) of a lightbulb
+mean_lifetime <- 1000  # hours
+
+# Calculate the rate parameter (λ) for exponential distribution
+lambda <- 1 / mean_lifetime
+
+# Expected lifetime of the first burnt bulb
+expected_lifetime <- 1 / lambda
+
+# Print the result
+cat("Expected time for the first lightbulb to burn out:", expected_lifetime, "hours\n")
+```
+
+#14
+
+Assume that X1 and X2 are independent random variables, each having an
+ exponential density with parameter λ. Show that Z = X1 −X2 has density
+ fZ(z) = (1/2)λe−λ|z| 
+
+```{r}
+# Given mean lifetime (average) of a lightbulb
+mean_lifetime <- 1000  # hours
+
+# Calculate the rate parameter (λ) for exponential distribution
+lambda <- 1 / mean_lifetime
+
+# Density function for Z
+density_Z <- function(z) {
+  0.5 * lambda * exp(-lambda * abs(z))
+}
+
+# Example: Compute density at z = 200
+z_value <- 200
+result <- density_Z(z_value)
+
+# Print the result
+cat("Density of Z at z =", z_value, "hours:", result, "\n")
+```
+#1
+
+Let X be a continuous random variable with mean µ = 10 and variance
+ σ2 = 100/3. Using Chebyshev’s Inequality, find an upper bound for the
+ following probabilities:
+
+ (a) P(|X −10| ≥ 2)
+ (b) P(|X −10| ≥ 5)
+ (c) P(|X −10| ≥ 9)
+ (d) P(|X −10| ≥ 20)
+
+
+```{r}
+# Given parameters
+mu <- 10
+sigma_sq <- 100/3
+
+# Calculate standard deviation
+sigma <- sqrt(sigma_sq)
+
+# Define the values of k for each part
+k_a <- 2 / sigma
+k_b <- 5 / sigma
+k_c <- 9 / sigma
+k_d <- 20 / sigma
+
+# Calculate the probabilities using Chebyshev's Inequality
+prob_a <- 1 / k_a^2
+prob_b <- 1 / k_b^2
+prob_c <- 1 / k_c^2
+prob_d <- 1 / k_d^2
+
+# Print the results
+cat("Upper bounds for probabilities:\n")
+cat("(a) P(|X - 10| ≥ 2):", prob_a, "\n")
+cat("(b) P(|X - 10| ≥ 5):", prob_b, "\n")
+cat("(c) P(|X - 10| ≥ 9):", prob_c, "\n")
+cat("(d) P(|X - 10| ≥ 20):", prob_d, "\n")
+```
+
