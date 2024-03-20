@@ -1,0 +1,47 @@
+---
+title: "Data 605 Discussion_9"
+author: "Alex Khaykin"
+date: "2024-03-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Chapter 9
+
+#13
+
+Physicists say that particles in a long tube are constantly moving back and
+ forth along the tube, each with a velocity Vk (in cm/sec) at any given moment
+ that is normally distributed, with mean µ = 0 and variance σ2 = 1. Suppose
+ there are 1020 particles in the tube.
+ 
+ (a) Find the mean and variance of the average velocity of the particles.
+ (b) What is the probability that the average velocity is ≥ 10−9 cm/sec?
+
+
+```{r}
+# Given parameters
+n_particles <- 1020
+mu <- 0
+sigma_sq <- 1
+
+# Calculate mean and variance of average velocity
+mu_avg <- mu / sqrt(n_particles)
+sigma_avg_sq <- sigma_sq / n_particles
+
+# Calculate Z-score for v = 10^-9 cm/sec
+v <- 1e-9
+Z_score <- (v - mu_avg) / sqrt(sigma_avg_sq)
+
+# Calculate cumulative probability
+prob_greater_than_v <- 1 - pnorm(Z_score)
+
+# Display results
+cat("Mean of average velocity (µ_avg):", mu_avg, "cm/sec\n")
+cat("Variance of average velocity (σ_avg²):", sigma_avg_sq, "\n")
+cat("Probability that average velocity ≥ 10⁻⁹ cm/sec:", prob_greater_than_v, "\n")
+```
+
