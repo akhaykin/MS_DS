@@ -1,0 +1,85 @@
+---
+title: "Data 605 HW_9"
+author: "Alex Khaykin"
+date: "2024-03-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Chapter 9
+
+#11
+
+The price of one share of stock in the Pilsdorff Beer Company (see Exer
+cise 8.2.12) is given by Yn on the nth day of the year. Finn observes that
+ the differences Xn = Yn+1 −Yn appear to be independent random variables
+ with a common distribution having mean µ = 0 and variance σ2 = 1/4. If
+ Y1 =100, estimate the probability that Y365 is
+ 
+ (a) ≥100.
+ (b) ≥110.
+ (c) ≥120
+
+
+```{r}
+# Given parameters
+Y_1 <- 100
+variance_X <- 1/4
+days <- 364
+
+# Calculate the standard deviation of the sum of differences
+sigma_S <- sqrt(days * variance_X)
+
+# Calculate the mean and standard deviation of Y_365
+mu_Y <- Y_1
+sigma_Y <- sqrt(sigma_S^2)
+
+# Calculate the standardized value for each case
+Z_a <- (100 - mu_Y) / sigma_Y
+Z_b <- (110 - mu_Y) / sigma_Y
+Z_c <- (120 - mu_Y) / sigma_Y
+
+# Calculate the probabilities using the cumulative distribution function (pnorm)
+prob_a <- 1 - pnorm(Z_a)
+prob_b <- 1 - pnorm(Z_b)
+prob_c <- 1 - pnorm(Z_c)
+
+# Output the probabilities
+cat("Probability that Y_365 is greater than or equal to 100:", prob_a, "\n")
+cat("Probability that Y_365 is greater than or equal to 110:", prob_b, "\n")
+cat("Probability that Y_365 is greater than or equal to 120:", prob_c, "\n")
+```
+2.Calculate the expected value and variance of the binomial distribution using the moment 
+generating function. 
+3.Calculate the expected value and variance of the exponential distribution using the moment 
+generating function. 
+
+```{r}
+# Given parameters
+n <- 365  # Number of trials
+p <- 0.5  # Probability of success
+
+# Expected value (mean) of Y365 (binomial)
+E_X <- n * p
+cat("Expected value (mean) of Y365 (binomial):", E_X, "\n")
+
+# Variance of Y365 (binomial)
+Var_X <- n * p * (1 - p)
+cat("Variance of Y365 (binomial):", Var_X, "\n")
+
+# Given parameter
+lambda_exp <- 1 / 365  # Rate parameter (average rate of events per day)
+
+# Expected value (mean) of Y365 (exponential)
+E_X_exp <- 1 / lambda_exp
+cat("Expected value (mean) of Y365 (exponential):", E_X_exp, "\n")
+
+# Variance of Y365 (exponential)
+Var_X_exp <- 1 / lambda_exp^2
+cat("Variance of Y365 (exponential):", Var_X_exp, "\n")
+```
+
+
