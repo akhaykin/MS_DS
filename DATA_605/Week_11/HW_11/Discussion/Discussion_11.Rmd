@@ -1,0 +1,57 @@
+---
+title: "Discussion_11"
+author: "Alex Khaykin"
+date: "2024-04-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+#reading in the data
+elec_prod <- read.csv("C:\\Users\\akhay\\OneDrive\\Documents\\DATA_SCIENCE\\DATA 605\\Week_11\\Discussion_11\\elec_prod_data.csv")
+```
+
+```{r}
+# subset of only Nuclear energy produciton
+nucl_prod <- subset(elec_prod, product=="Nuclear") 
+nucl_prod$date <- as.Date(nucl_prod$date, format = "%m/%d/%Y")
+```
+
+
+```{r}
+# Create a scatter plot
+plot(nucl_prod$value ~ nucl_prod$date, xlab = "date", ylab = "value")
+```
+
+
+```{r}
+# summary of the data
+summary(nucl_prod)
+```
+
+
+```{r}
+# Fit the linear model
+lm_model <- lm(value ~ date, data = nucl_prod)
+
+# Summary of the model
+summary(lm_model)
+```
+
+```{r}
+# Residual analysis
+par(mfrow = c(1, 2))  
+
+# Residuals vs. Fitted
+plot(lm_model, which = 1)  
+# Normal Q-Q plot
+plot(lm_model, which = 2)  
+```
+
+# Conclusion
+The linear model is not appropriate, because the residuals do not have a linear relationship with the fitted values and the residuals are not normally distributed.
