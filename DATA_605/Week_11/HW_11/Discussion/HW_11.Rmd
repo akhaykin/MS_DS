@@ -1,0 +1,54 @@
+---
+title: "Data 605 HW_11"
+author: "Alex Khaykin"
+date: "2024-04-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# HW Question
+
+Using the “cars” dataset in R, build a linear model for stopping distance as a function of speed and 
+replicate the analysis of your textbook chapter 3 (visualization, quality evaluation of the model, and 
+residual analysis.)
+
+
+```{r cars}
+# Load the cars dataset
+data(cars)
+
+# summary of the data
+summary(cars)
+```
+
+```{r}
+# Create a scatter plot
+plot(cars, xlab = "Speed (mph)", ylab = "Stopping distance (ft)", las = 1, xlim = c(0, 25))
+```
+
+```{r}
+# Fit the linear model
+lm_model <- lm(dist ~ speed, data = cars)
+
+# Summary of the model
+summary(lm_model)
+```
+```{r}
+# Assess model quality (R-squared value)
+cat("R-squared value:", summary(lm_model)$r.squared, "\n")
+
+# Residual analysis
+par(mfrow = c(1, 2))  # Set up a 1x2 grid for plots
+plot(lm_model, which = 1)  # Residuals vs. Fitted
+plot(lm_model, which = 2)  # Normal Q-Q plot
+```
+
+# Conclusion
+
+A higher R-squared indicates a better fit.
+
+A well-fitted model should have random residuals without any discernible structure.
