@@ -1,0 +1,110 @@
+---
+title: "Data HW_12"
+author: "Alex Khaykin"
+date: "2024-04-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The attached who.csv dataset contains real-world data from 2008.  The variables included follow.
+
+Country:  name of the country 
+LifeExp:  average life expectancy for the country in years 
+InfantSurvival:  proportion of those surviving to one year or more 
+Under5Survival:  proportion of those surviving to five years or more 
+TBFree:  proportion of the population without TB. 
+PropMD:  proportion of the population who are MDs 
+PropRN:  proportion of the population who are RNs 
+PersExp:  mean personal expenditures on healthcare in US dollars at average exchange rate 
+GovtExp:  mean government expenditures per capita on healthcare, US dollars at average exchange rate 
+TotExp:  sum of personal and government expenditures. 
+
+1. Provide a scatterplot of LifeExp~TotExp, and run simple linear regression.  Do not transform the 
+variables.  Provide and interpret the F statistics, R^2, standard error,and p-values only.  Discuss 
+whether the assumptions of simple linear regression met. 
+
+2. Raise life expectancy to the 4.6 power (i.e., LifeExp^4.6).  Raise total expenditures to the 0.06 
+power (nearly a log transform, TotExp^.06). Plot LifeExp^4.6  as a function of TotExp^.06, and r 
+re-run the simple regression model using the transformed variables.  Provide and interpret the F 
+statistics, R^2, standard error, and p-values.   Which model is "better?"
+
+3. Using the results from 3, forecast life expectancy when TotExp^.06 =1.5.  Then forecast life 
+expectancy when TotExp^.06=2.5.
+
+4. Build the following multiple regression model and interpret the F Statistics, R^2, standard error, 
+and p-values.  How good is the model? 
+LifeExp = b0+b1 x PropMd + b2 x TotExp  +b3 x PropMD x TotExp 
+
+5.   Forecast LifeExp when PropMD=.03 and TotExp = 14.  Does this forecast seem realistic?  Why 
+or why not? 
+
+```{r}
+# to load the dataset
+who_data <- read.csv("C:\\Users\\akhay\\OneDrive\\Documents\\DATA_SCIENCE\\DATA 605\\Week_12\\who_data.csv")
+
+# to create a scatterplot
+plot(who_data$TotExp, who_data$LifeExp, xlab = "Total Expenditures", ylab = "Life Expectancy",
+     main = "Scatterplot: Life Expectancy vs. Total Expenditures")
+
+# to run simple linear regression
+lm_result <- lm(LifeExp ~ TotExp, data = who_data)
+
+# Eto extract relevant statistics
+summary(lm_result)$coefficients
+```
+
+
+```{r}
+# to transform variables
+who_data$LifeExp_transformed <- who_data$LifeExp^4.6
+who_data$TotExp_transformed <- who_data$TotExp^0.06
+
+# to create a scatterplot
+plot(who_data$TotExp_transformed, who_data$LifeExp_transformed,
+     xlab = "Transformed Total Expenditures", ylab = "Transformed Life Expectancy",
+     main = "Scatterplot: Transformed Life Expectancy vs. Transformed Total \n Expenditures")
+
+# to run regression with new variables
+lm_result_transformed <- lm(LifeExp_transformed ~ TotExp_transformed, data = who_data)
+
+# to extract relevant statistics
+summary(lm_result_transformed)$coefficients
+```
+
+```{r}
+# to forecast life expectancy at TotExp_transformed = 1.5
+forecast_1.5 <- predict(lm_result_transformed, newdata = data.frame(TotExp_transformed = 1.5))
+
+# to forecast life expectancy at TotExp_transformed = 2.5
+forecast_2.5 <- predict(lm_result_transformed, newdata = data.frame(TotExp_transformed = 2.5))
+```
+
+
+```{r}
+# to build multiple regression model
+lm_multiple <- lm(LifeExp ~ PropMD + TotExp + PropMD * TotExp, data = who_data)
+
+# to extract relevant statistics
+summary(lm_multiple)$coefficients
+```
+
+
+Smaller p-values mean more significant relationships. Also, the signs of the coefficients (+/-) indicate the direction of the relationship between the predictor and dependant variables.
+
+```{r}
+# to forecast LifeExp when PropMD = 0.03 and TotExp = 14
+forecast_specific <- predict(lm_multiple, newdata = data.frame(PropMD = 0.03, TotExp = 14))
+```
+
+
+```{r}
+summary(forecast_specific)
+```
+
+# Conclusion
+
+The forecasted life expectancy of 108 does not seam realistic. But certainly possible.
+
