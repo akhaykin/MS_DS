@@ -1,0 +1,181 @@
+---
+title: "HW_13"
+author: "Alex Khaykin"
+date: "2024-04-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# 1.
+
+Use integration by substitution to solve the integral below.
+∫4e−7xdx
+
+```{r}
+# Define the function to be integrated
+f <- function(x) 4 * exp(-7 * x)
+
+# Integrate the function
+result <- integrate(f, lower = 0, upper = 1)  # Change the lower and upper limits as needed
+
+# Print the result
+print(result)
+```
+# 2.
+
+Biologists are treating a pond contaminated with bacteria. The level of contamination is changing at a rate of dN dt =  3150 t 4  220 bacteria per cubic centimeter per day, where t is the number of days since treatment began. Find a function N( t ) to estimate the level of contamination if the level after 1 day was 6530 bacteria per cubic centimeter.
+
+```{r}
+# Define the function to calculate N(t)
+N <- function(t) {
+  1050 * t^(-3) - 220 * t + 5760
+}
+
+# Initial level of contamination after 1 day
+N_initial <- 6530
+
+# Find the constant C using the initial condition N(1) = 6530
+C <- N_initial - (1050 * (1)^(-3)) + (220 * 1)
+
+# Define the updated function N(t) with the calculated constant C
+N_updated <- function(t) {
+  1050 * t^(-3) - 220 * t + C
+}
+
+# Estimate the level of contamination after t days
+t <- 1  # Number of days
+contamination_estimate <- N_updated(t)
+
+# Print the estimated level of contamination
+print(contamination_estimate)
+```
+# 3.
+
+ Find the total area of the red rectangles in the figure below, where the equation of the line is  
+f ( x ) = 2x  9.
+
+```{r}
+# Define the function f(x) = 2x - 9
+f <- function(x) {
+  return(2 * x - 9)
+}
+
+# Define the interval [4.5, 8]
+a <- 4.5
+b <- 8
+
+# Number of subintervals
+n <- 4
+
+# Calculate the width of each subinterval
+delta_x <- (b - a) / n
+
+# Evaluate f(x) at the right endpoints of each subinterval
+x_values <- seq(a + delta_x, b, by = delta_x)
+f_values <- f(x_values)
+
+# Calculate the area of each rectangle
+areas <- f_values * delta_x
+
+# Total area
+total_area <- sum(areas)
+
+# Print the result
+cat("The total area of the red rectangles is approximately", round(total_area, 2), "square units.\n")
+```
+```{r}
+# plot
+curve(x^2 - 2*x - 2, -5, 5, col = "darkblue")
+curve(x + 2, -5, 5, add=T, col="red")
+```
+
+
+# 4. 
+
+Find the area of the region bounded by the graphs of the given equations. y = x2 - 2x - 2, y = x + 2
+
+```{r}
+# TO Define the functions for the curves
+f1 <- function(x) x^2 - 2*x - 2
+f2 <- function(x) x + 2
+
+# To find the intersection points
+x1 <- -1
+x2 <- 4
+
+# difference between the curves
+area <- integrate(function(x) f2(x) - f1(x), lower = x1, upper = x2)
+
+# To display the result
+cat("The area of the region bounded by the curves is approximately", round(area$value, 2), "square units.\n")
+```
+# 5.
+
+A beauty supply store expects to sell 110 flat irons during the next year.  It costs $3.75 to store one flat iron for one year.  
+There is a fixed cost of $8.25 for each order.  Find the lot size and the number of orders per year that will minimize 
+inventory costs.
+
+```{r}
+# The given data
+D <- 110  # Expected annual demand (flat irons)
+c <- 8.25  # Fixed cost per order
+h <- 3.75  # Cost to store one flat iron for one year
+
+# To calculate EOQ
+EOQ <- sqrt((2 * D * c) / h)
+
+# To round up to the nearest whole number for lot size
+lot_size <- ceiling(EOQ)
+
+# to calculate the number of orders per year
+num_orders <- D / lot_size
+num_orders <- ceiling(num_orders)
+
+# To display the results
+cat("Optimal lot size (rounded up):", lot_size, "\n")
+cat("Number of orders per year (rounded up):", num_orders, "\n")
+```
+
+# 6.
+
+Use integration by parts to solve the integral below.
+
+∫ln(9x)x6dx:
+
+```{r}
+# Define the functions for u and v
+u <- function(x) log(9*x)
+v <- function(x) x^7 / 7
+
+# Calculate the integral using integration by parts
+integ_by_parts <- function(x) u(x) * v(x) - integrate(v, lower = 0, upper = x)$value
+
+# Evaluate the integral from 0 to 1 (you can adjust the limits if needed)
+result <- integ_by_parts(1) - integ_by_parts(0)
+
+# Display the result
+cat("The value of the integral is approximately", round(result, 2), "\n")
+```
+# 7.
+
+Determine whether f (x ) is a probability density function on the interval 1, e6 .  If not, determine the value of the 
+definite integral.
+ f ( x ) = 1/6x
+
+```{r}
+# Define the function f(x)
+f <- function(x) {
+  return(1 / (6 * x))
+}
+
+# Calculate the definite integral from 1 to e^6
+integral_value <- integrate(f, lower = 1, upper = exp(6))$value
+
+# Print the result
+cat("The value of the definite integral is approximately", round(integral_value, 6), "\n")
+```
+
