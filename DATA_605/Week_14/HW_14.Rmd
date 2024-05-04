@@ -1,0 +1,80 @@
+---
+title: "HW_14"
+author: "Alex Khaykin"
+date: "2024-05-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This week, we’ll work out some Taylor Series expansions of popular functions.
+
+f (x) = (1−x)
+
+f (x) = ex
+
+f (x) = ln(1 + x)
+
+f(x)=x(1/2)
+
+For each function, only consider its valid ranges as indicated in the notes when you are computing the Taylor Series expansion. Please submit your assignment as an R- Markdown document.
+
+1.(f(x) = (1 - x)):
+
+```{r}
+# Taylor Series expansion for f(x) = 1 - x
+# Centered around a = 0 (Maclaurin Series)
+f <- function(x) {
+  1 - x
+}
+
+# Example usage:
+x_values <- seq(-1, 1, by = 0.1)
+y_values <- f(x_values)
+plot(x_values, y_values, type = "l", main = "Taylor Series: f(x) = 1 - x")
+```
+2.(f(x) = e^x):
+
+```{r}
+# Taylor Series expansion for f(x) = e^x
+# Centered around a = 0 (Maclaurin Series)
+f <- function(x) {
+  exp(x)
+}
+
+# Example usage:
+x_values <- seq(-2, 2, by = 0.1)
+y_values <- f(x_values)
+plot(x_values, y_values, type = "l", main = "Taylor Series: f(x) = e^x")
+```
+3.(f(x) = \ln(1 + x)):
+
+```{r}
+# Taylor Series expansion for f(x) = ln(1 + x)
+# Centered around a = 0 (Maclaurin Series)
+f <- function(x) {
+  log(1 + x)
+}
+
+# Example usage:
+x_values <- seq(-0.9, 1, by = 0.1)
+y_values <- f(x_values)
+plot(x_values, y_values, type = "l", main = "Taylor Series: f(x) = ln(1 + x)")
+```
+4.(f(x) = x^{1/2}):
+
+```{r}
+# Taylor Series expansion for f(x) = x^(1/2)
+# Centered around a = 1
+f <- function(x) {
+  sqrt(x)
+}
+
+# Example usage:
+x_values <- seq(0, 2, by = 0.1)
+y_values <- f(x_values)
+plot(x_values, y_values, type = "l", main = "Taylor Series: f(x) = x^(1/2)")
+```
+
