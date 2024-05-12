@@ -1,0 +1,906 @@
+---
+title: "Using machine learning algorithms to predict violent hate crimes in the United States."
+author: "Alexander Khaykin"
+date: "Last edited `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    df_print: paged
+  pdf_document:
+    fig_caption: yes
+    toc: yes
+    number_sections: yes
+    keep_tex: yes
+    df_print: paged
+urlcolor: blue
+geometry: left=0.5cm,right=0.5cm,top=1cm,bottom=2cm
+bibliography: data_698_final_proj.bib
+nocite: '@*'
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(warning = FALSE, 
+                      message = FALSE, 
+                      cache = TRUE, 
+                      cache.comments=TRUE, 
+                      echo = FALSE)
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+# Cleaner set up and loading
+pacman::p_unload(pacman::p_loaded(), character.only = TRUE)
+
+pacman::p_load(tidyverse, 
+               ggplot2,
+               GGally,
+               corrplot,
+               psych,
+               caret,
+               forcats,
+               car, 
+               kableExtra,
+               stargazer,
+               gtsummary,
+               explore,
+               lubridate,
+               prcomp,
+               caTools,
+               randomForest,
+               pROC)
+
+# set seed & globaloptions
+set.seed(123)
+options(scipen = 999)
+```
+
+```{r readdata, echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+###################### DATA PREPARATION ###############################
+# loading the data
+ df_hate_crime <- read.csv("C:\\Users\\akhay\\OneDrive\\Documents\\DATA_SCIENCE\\DATA 698\\Ressearch project\\data\\hate_crime.csv")
+```
+
+
+# ABSTRACT
+
+In recent years, the surge in violent hate crimes has become a global concern, with the United States experiencing a notable increase. Against this backdrop, my research project aims to develop a predictive model capable of anticipating violent hate crimes relative to nonviolent hate crimes. I delve into hate crime patterns and trends, focusing specifically on incidents categorized as violent hate crimes. Leveraging data from the FBI crime lab statistics and the Organization for Security and Co-operation in Europe (OSCE), I rigorously clean and preprocess the dataset. Key features related to hate crimes, including victim demographics and incident location, are explored. I extract meaningful features through logistic regression and random forest model building, evaluating model performance using relevant metrics. Additionally, I investigate the relative importance of different features in predicting violent hate crimes, considering key limitations. My goal is to enhance understanding and contribute to efforts aimed at preventing and addressing violent hate-related incidents.
+
+# INTRODUCTION
+
+On October 7th, 2023, Hamas, a designated terrorist organization, successfully launched an infiltration operation into Israeli sovereign territory. The repercussions of this event extended globally, including within the United States, where incidents of violent hate crimes have surged. Recent data trends indicate a concerning increase in violent hate crime cases, with the 2022 hate crime statistics revealing the highest number of reported incidents in recent years. In response to this alarming trend, my research project aims to develop a predictive model capable of anticipating violent hate crimes relative to nonviolent hate crimes.
+
+My investigation delved into the patterns and trends related to hate crimes, with a specific focus on incidents categorized as violent hate crimes. I used data from the FBI crime lab statistics and the from the Organization for Security and Co-operation in Europe (OSCE). Rigorous data cleaning and pre-processing ensured the quality and consistency of this dataset. Exploring key features related to hate crimes—such as victim demographics, incident location, and specific details was crucial. An attempt was made to extract meaningful features through logistic regression and random forest model building. Model performance was  evaluated using relevant metrics such as accuracy, precision, recall, and F1-score. Additionally, understanding the relative importance of different features in predicting violent hate crimes could provide valuable insights, which are explored in the context of key limitations. It is my goal to enhance our understanding of violent hate crimes and contribute to efforts aimed at preventing and addressing violent hate-related incidents.
+
+## LITERATURE REVIEW
+
+In "High times for hate crimes: Explaining the temporal clustering of hate-motivated offending", King et al. (2019) hypothesizes that many hate crimes are retaliatory in nature. These crimes tend to increase following a former event that leads one group to harbor grievances against another. Some examples being, contentious criminal trials involving interracial crimes, lethal domestic terrorist attacks, as well as court decisions. The study finds that contentious trial verdicts related to interracial crimes precede spikes in racially or religiously motivated hate crimes. Similar to contentious trials, lethal domestic terrorist attacks also lead to increased hate crimes as retaliation. However, there is less evidence for anti-gay hate crimes following court rulings that grant rights to same-sex partners. Therefore, it is my conclusion that not all hate crimes are retaliatory or reactive in nature.
+
+This article’s model links prior work by explaining the timing of hate crime clusters (King et al. 2019). Their model provides valuable insights into the dynamics of hate crimes and their patterns. Understanding these patterns can inform policy decisions and interventions aimed at preventing hate-motivated offenses. While existing research has primarily focused on demographic factors and economic conditions as determinants of hate crimes, this study sheds light on the importance of discrete triggering events in understanding the occurrence of hate-motivated offenses (King et al. 2019).
+    
+In “Predictive Policing: Review of Benefits and Drawbacks”, Mugari and Obioha (2021) shed light on the conceptualization of predictive policing, as well as its potential benefits and drawbacks. Predictive policing systems have gained significant attention as law enforcement agencies utilize modern technology to forecast criminal activity. Over the last decade (2010 to 2020), various nations have implemented predictive policing, however, with mixed results and public reactions regarding its effectiveness. Initially, predictive policing involved simple algorithms, but it has evolved in sophistication and capability with the constant changing technological landscape.
+
+Their review examines the adoption of predictive software applications such as PredPol, Risk Terrain Modelling, HunchLab, PreMap, PRECOBS, Crime Anticipation System, and Azevea (Mugari and Obioha 2021). Despite these advancements, several limitations exist, affecting the efficacy of predictive policing. Some predictive algorithms exhibit limited accuracy in forecasting criminal events. Not all types of crimes can be effectively predicted using existing models. Implementing and maintaining these systems can be expensive. The quality and completeness of data used for predictions impact their reliability. Biases in data or algorithms can lead to discriminatory outcomes. Despite these challenges, researchers widely recognize the importance of predictive algorithms in shaping the policing and law enforcement landscapes. Policymakers and law enforcement agencies continue to explore ways to enhance predictive policing while addressing its limitations.
+
+Machine learning is an avenue of exploration for predictive policing and policy making for hate crimes that has had relatively low attention. Analyses have been focused on either temporal (King et al. 2019) or geographic (Jendryke and McClure 2021) predictions. Studies often also tend to be geographically restricted, for example the analysis by Jendryke and McClure (2021) used an artificial neural network to predict hate crimes across thirteen US states for the year 2017. Even with only 454 data points, however, they were able to find some association and generate a prediction using their methodology.
+
+The Federal Bureau of Investigation has been collecting data on hate crimes committed from local and international agencies for over three decades. This incredibly rich dataset spans 1991 - 2022, and in its raw state contains 241,663 data points (Table 1). The FBI defines hate crimes as crime motivated by bias against race / ethnicity, gender identity, sexual orientation, or disability, among others (FBI, "Hate Crime Statistics"). Hate crimes range from misdemeanors to felonies and can be violent or non-violent. Further, the FBI clearly distinguishes between violent hate crimes as one of four types of felonies: Murder / Non-Negligible Manslaughter, Robbery, Rape, and Aggravated Assault (FBI, "@violent_crime"). Thus, my analysis uses the definition of hate crime used by the FBI.
+
+```{r, echo=FALSE, results='hide'}
+#1. Trim dataset to the nonredundant variables
+## Removing additional redundant and/or non-informative variables like incident_id, ori, division_name, state_name (because state_abbr is already in dataset); public agency name or unit is too granular to be of use also. population_group_description is redundant with the code
+df_hate_crime <- df_hate_crime%>%
+  dplyr::select(-c(adult_victim_count,juvenile_victim_count,adult_offender_count,juvenile_offender_count,total_individual_victims, incident_id, ori, division_name, state_name, pug_agency_name, pub_agency_unit, population_group_description, data_year))
+```
+
+
+```{r, echo=FALSE}
+#2. make data dictionary & display
+dict <- tribble(
+  ~ Variable, ~ Description,
+  "`agency_type_name`", "Reporting agency type",
+  "`state_abbr`", "State where hate crime occurred",
+  "`region_name`", "US region where hate crime occurred",
+  "`population_group_code`", "Code of population covered by the ORI",
+  "`incident_date`", "Date that the incident occurred",
+  "`total_offender_count`", "The total number of offenders in the incident",
+  "`offender_race`", "This is the race of the offenders as a group",
+  "`offender_ethnicity`", "This is the ethnicity of the offender as a group",
+  "`victim_count`", "This is the total number of victims associated with this offense",
+  "`offense_name`", "The offense codes and the specifics for each offense",
+  "`location_name`", " This is where this offense occurred",
+  "`bias_desc`", " These are the bias motivations of the offender(s) for each 
+   offense. These are the bias motivations of the offender(s) for each 
+   offense",
+  "`victim_types`", "These are the victim types associated with this offense",
+  "`multiple_offense`", "Offense codes and the specifics for each offense",
+  "`multiple_bias`", "These are the bias motivations of the offender(s) for each 
+   offense"
+)
+
+kable(
+  dict, 
+  format = "html",
+  caption = "Table 1. Overview of Variables available in the original dataset"
+) %>% 
+  kable_styling(bootstrap_options = c("hover"))
+```
+
+# METHODOLOGY
+
+Using data from the FBI crime lab statistics (Table 1), data were cleaned and pre-processed to ensure quality and consistency. This was followed by exploration of key features related to hate crimes—such as victim demographics, incident location. After which an attempt was made to extract meaningful features through logistic regression and random forest model building. The next sections go through each of these steps in greater detail.
+
+## DATA PREPARATION
+
+The raw dataset spanned 1991 - 2022, contained 241,663 data points with sixteen features that were brought in for analysis (Table 1). None of the dataset was duplicated, and all data types were made to be appropriate. `Incident_date` was split into `month` and `year` using the `lubridate` package. 
+
+Next, the response variable `violent` was created based on the FBI's definition of violence using the `offense_name` feature. All other hate crime offenses were collapsed and re-coded using one-hot encoding methods to create separate features for each `offense_name` in the original dataset. Importantly, offenses generally co-occur in the dataset, so any given incident of hate crime could have a violent and non-violent aspect. Including violent offenses there were 399 unique combinations of `offense_name`. However, these were in a single column separated by semicolons and thus required a combination of collapsing and re-codding. The final result yielded an additional 15 features.
+
+
+```{r echo=FALSE, results='hide'}
+#3. Create a binary target column
+
+df_hate_crime <- df_hate_crime %>%
+  mutate(violent = ifelse(grepl("Aggravated Assault|Rape|Murder and Nonnegligent Manslaughter|Robbery",
+                                     offense_name, ignore.case = TRUE), 1, 0))
+```
+
+
+```{r, echo=FALSE, results='hide'}
+#4. Collapsing and re-coding offense into dummy variables
+
+df_hate_crime <- df_hate_crime %>%
+   mutate(offense_TheftLarcenyFraud = ifelse(grepl("*Theft*|*Larceny*|*Fraud*|*Stolen*|*Purse-snatching*|*Pocket-picking*|*Embezzlement*|*Hacking*|*Extortion*|*Confidence*|*Forgery*|*Impersonation*|*Shoplifting*|*Burglary*", offense_name, ignore.case = TRUE), 1, 0),
+          offense_Robbery = ifelse(grepl("Robbery", offense_name, ignore.case = TRUE), 1, 0),
+          offense_Rape = ifelse(grepl("Rape", offense_name, ignore.case = TRUE), 1, 0),
+          offense_SexualCrime = ifelse(grepl("*Sodomy*|*Fondling*|*Incest*|*Prostitution*|*Pornography*", offense_name, ignore.case = TRUE), 1, 0),
+          offense_Arson = ifelse(grepl("*Arson*", offense_name, ignore.case = TRUE), 1, 0),
+          offense_Weapon = ifelse(grepl("*Assault*|*Weapon*", offense_name, ignore.case = TRUE), 1, 0),
+          offense_Weapon = ifelse(grepl("*Aggravated*", offense_name, ignore.case = TRUE), 0, offense_Weapon),
+          offense_AggAssault = ifelse(grepl("*Aggravated*", offense_name, ignore.case = TRUE), 1, 0),
+          ## numerous assault categories, weapon law violations
+          offense_Vandalism = ifelse(grepl("*Vandalism*", offense_name, ignore.case = TRUE), 1, 0),
+          offense_Murder = ifelse(grepl("Murder and Nonnegligent Manslaughter", offense_name, ignore.case = TRUE), 1, 0),
+          offense_NvManslaughter = ifelse(grepl("*Manslaughter*", offense_name, ignore.case = TRUE)& !grepl("Nonnegligent", offense_name, ignore.case = TRUE), 1, 0),
+          offense_AnimalCruelty = ifelse(grepl("Animal Cruelty", offense_name, ignore.case = TRUE), 1, 0),
+          offense_Intimidation = ifelse(grepl("*Intimidation*", offense_name, ignore.case = TRUE), 1, 0),
+          offense_Kidnapping = ifelse(grepl("*Kidnapping*|*Trafficking*", offense_name, ignore.case = TRUE), 1, 0),
+          offense_Other = ifelse(grepl("*Treason*|Not Specified|*Liquor*|*Gambling*|*Drug*|*Bribery*|*Betting*", offense_name, ignore.case = TRUE), 1, 0)) %>% 
+  dplyr::select(-offense_name) # drop the original column
+```
+
+
+A similar process was performed for `victim_types` and `location_name`. For `victim_types` there were 55 unique victim types in the dataset; this was collapsed and recoded to create 7 new features. `Location_name` refers to the location where the hate crime incident occurred; of the 149 unique location names in the dataset, 15 new features were created after collapsing and recoding.Notably this was done to condense a number of categories to reduce dimensionality of the data and prevent possible overfitting. `Location_name` categories were grouped broadly. Additionally, one-hot encoding was used to broadly categorize `bias_name`.
+
+
+```{r, echo=FALSE, results='hide'}
+#5. clean up `victim_types`, `offense_name` & `location_name` by splitting the columns containing multiple info (separated by ;) into one-hot encoded variables
+length(unique(df_hate_crime$victim_types))
+df_hate_crime <- df_hate_crime %>%
+   mutate(victim_Business = ifelse(grepl("Business", victim_types, ignore.case = TRUE), 1, 0),
+          victim_Individual = ifelse(grepl("Individual", victim_types, ignore.case = TRUE), 1, 0),
+          victim_SocietyPublic = ifelse(grepl("Society/Public", victim_types, ignore.case = TRUE), 1, 0),
+          victim_Government = ifelse(grepl("Government", victim_types, ignore.case = TRUE), 1, 0),
+          victim_Religious = ifelse(grepl("Religious Organization", victim_types, ignore.case = TRUE), 1, 0),
+          victim_Police = ifelse(grepl("Law Enforcement Officer", victim_types, ignore.case = TRUE), 1, 0),
+          victim_Other = ifelse(grepl("Other", victim_types, ignore.case = TRUE), 1, 0)) %>% 
+  dplyr::select(-victim_types) # drop the original column
+```
+
+```{r}
+#6. clean up `bias_desc` by collapsing and then one-hot encoding
+df_hate_crime <- df_hate_crime %>%
+   mutate(bias_race = ifelse(grepl("*Black*|*White*|*Hispanic*|*Race*|*Asian*|*Alaska*|*Pacific*|*Arab*|*Races*", bias_desc, ignore.case = TRUE), 1, 0),
+          bias_disability = ifelse(grepl("Disability", bias_desc, ignore.case = TRUE), 1, 0),
+          bias_gender = ifelse(grepl("Anti-Male|Anti-Female|Anti-Gender", bias_desc, ignore.case = TRUE), 1, 0),
+          bias_sex_orient = ifelse(grepl("*Gay*|*Lesbian*|*Bisexual*|*Heterosexual*|*Transgender*", bias_desc, ignore.case = TRUE), 1, 0),
+          bias_christian = ifelse(grepl("*Catholic*|*Orthodox*|*Church*|*Jesus*|*Christian*|Protestant*|*Witness*", bias_desc, ignore.case = TRUE), 1, 0),
+          bias_other_religion= ifelse(grepl("*Muslim*|*Islam*|*Sikh*|*Religion*|*Atheism/Agnosticism*|*Hindu*|*Buddhist*", bias_desc, ignore.case = TRUE), 1, 0),
+          bias_jewish = ifelse(grepl("*Jewish*", bias_desc, ignore.case = TRUE), 1, 0))
+```
+
+
+```{r, echo=FALSE, results='hide'}
+#6.  Collapse location meaningfully to reduce the variation/dimensionality of the dataset & one-hot encode
+
+df_hate_crime <- df_hate_crime %>%
+   mutate(location_TransportationTerminal = ifelse(grepl("*Terminal*", location_name, ignore.case = TRUE), 1, 0),
+              ## airports, docks, wharfs, bus stations
+          location_EducationInstitution = ifelse(grepl("*College*|*School*|*Daycare*|*Community*", location_name, ignore.case = TRUE), 1, 0),
+              ## elementary, hs, college, daycare, community center
+          location_EntertainmentVenue = ifelse(grepl("*Casino*|*Arena*|*Amusement*", location_name, ignore.case = TRUE), 1, 0),
+          location_ResidenceHotel = ifelse(grepl("*Home*|*Hotel*", location_name, ignore.case = TRUE), 1, 0),
+          location_BarRestaurant = ifelse(grepl("*Bar*|*Restaurant*", location_name, ignore.case = TRUE), 1, 0),
+            # bars, pubs, restaurants, nightclubs
+          location_ShoppingBankATM = ifelse(grepl("*Mall*|*Department*|*Bank*|*ATM*|*Specialty*|*Liquor*|*Gas*|*Convenience*|*Grocery*", location_name, ignore.case = TRUE), 1, 0),
+          location_RoadSidewalkParking = ifelse(grepl("*Highway*|*Parking*", location_name, ignore.case = TRUE), 1, 0),
+          location_ParkWoodsBeachRestArea = ifelse(grepl("*Park*|*Woods*|*Beach*|Rest Area|*Camp*", location_name, ignore.case = TRUE), 1, 0),
+          # park, playground, woods, fields, beach, lake, rest areas, campgrounds
+          location_Medical = ifelse(grepl("Drug Store/Doctor's Office/Hospital", location_name, ignore.case = TRUE), 1, 0),
+          location_Jail = ifelse(grepl("Jail/Prison/Penitentiary/Corrections Facility", location_name, ignore.case = TRUE), 1, 0),
+          location_PublicBuilding = ifelse(grepl("Government/Public Building", location_name, ignore.case = TRUE), 1, 0),
+          location_Cyberspace = ifelse(grepl("Cyberspace", location_name, ignore.case = TRUE), 1, 0),
+          location_WorkLocation = ifelse(grepl("*Farm*|*Site*|*Commercial*", location_name, ignore.case = TRUE), 1, 0),
+          # industrial site, construction site, farm facilities, commercial office buildings
+          location_ReligiousBuilding = ifelse(grepl("*Church/Synagogue/Temple/Mosque", location_name, ignore.case = TRUE), 1, 0),
+          location_Other = ifelse(grepl("*Abandoned*|*Other*|*Rental*|*Military*|*Tribal*|*Auto*", location_name, ignore.case = TRUE), 1, 0)) %>% 
+  dplyr::select(-location_name) ## Make sure you drop the original column!
+```
+
+
+Further, the population grouping for [metropolitan areas](https://ucr.fbi.gov/crime-in-the-u.s/2018/crime-in-the-u.s.-2018/topic-pages/area-definitions) needed to be condensed into meaningful descriptions. Otherwise, `population_description` was generally left as in the original dataset. `Offender_race` was grouped into the four largest categories: _White_, _Black_, _Asian_ and _Other_. Additionally, there was originally a category _missing/unknown_ which was converted to NA to accurately reflect missingness. Thus the 8 original categories in the dataset were recoded into just 4, this was because some categories had very low frequencies and therefore low power to detect significant differences. Similarly, `offender_ethnicity` were grouped into the 3 largest categories: _Latino_, `_Non-Latino_, & _Other_  and the _missing/unknown_ recoded as NA.
+
+
+```{r, echo=FALSE, results='hide'}
+#7. recoding original population group codes by population density
+
+df_hate_crime <- df_hate_crime %>% 
+  mutate(population_description = case_when(
+            population_group_code == '1A' ~ '250,000+',
+            population_group_code == '1B' ~ '250,000+',
+            population_group_code == '1C' ~ '250,000+',
+            population_group_code == '2' ~  '100,000+',
+            population_group_code == '3' ~  '<100,000',
+            population_group_code == '4' ~  '<100,000',
+            population_group_code == '5' ~  '<100,000',
+            population_group_code == '6' ~  '<100,000',
+            population_group_code == '7' ~  '<100,000',
+            population_group_code == '0' ~  'Other',
+            population_group_code == '8A' ~  '100,000+',
+            population_group_code == '8B' ~  '<100,000',
+            population_group_code == '8C' ~  '<100,000',
+            population_group_code == '8D' ~  '<100,000',
+            population_group_code == '8E' ~  'Other',
+            population_group_code == '9A' ~  '100,000+',
+            population_group_code == '9B' ~  '<100,000',
+            population_group_code == '9C' ~  '<100,000',
+            population_group_code == '9D' ~  '<100,000',
+            population_group_code == '9E' ~  'Other')) %>% 
+  mutate(population_description = ifelse(is.na(population_description), '1,000,000+', population_description)) %>%   select(-population_group_code)    ## drop the original
+```
+
+
+```{r, echo=FALSE, results='hide'}
+#8. collapsing and recoding racial categories
+
+df_hate_crime <- df_hate_crime %>% 
+  mutate(offender_race = case_when(offender_race == 'American Indian or Alaska Native' ~ 'Other',
+                                   offender_race == 'Black or African American' ~ 'Black',
+                                   offender_race == 'Asian' ~ 'Asian',
+                                   offender_race == 'Multiple' ~ 'Other',
+                                   offender_race == 'Native Hawaiian or Other Pacific Islander' ~ 'Other',
+                                   offender_race == 'Unknown' ~ NA,
+                                   offender_race == 'Not Specified' ~ NA,
+                                   offender_race == 'White' ~ 'White'))
+```
+
+
+```{r, echo=FALSE, results='hide'}
+#9. recoding offender ethnicity
+
+df_hate_crime <- df_hate_crime %>% 
+  mutate(offender_ethnicity = case_when(offender_ethnicity == 'Hispanic or Latino' ~ 'Latino',
+                                   offender_ethnicity == 'Not Hispanic or Latino' ~ 'Non-Latino',
+                                   offender_ethnicity == 'Multiple' ~ 'Other',
+                                   offender_ethnicity == 'Unknown' ~ NA,
+                                   offender_ethnicity == 'Not Specified' ~ NA))
+```
+
+
+```{r, echo=FALSE, results='hide'}
+#10. separating date into month and year
+df_hate_crime <- df_hate_crime %>% 
+  mutate(incident_date = as.Date(incident_date, format = "%m/%d/%Y"), year = year(incident_date), month = month(incident_date))
+```
+
+
+One observation for these data is that some features have very low proportions of violent hate crimes reported, perhaps even as low as zero. As part of feature selection, I decided to drop any category for which there were under 1% occurrences in both violent and non-violent categories.
+
+
+```{r}
+#11.  Need to recode multiple offense
+df_hate_crime <- df_hate_crime %>% 
+  mutate(multiple_offense = ifelse(multiple_offense == "S", 1, ifelse(multiple_offense =="M", 2, NA) ), 
+         multiple_bias = ifelse(multiple_bias == "S", 1, ifelse(multiple_bias == "M", 2, NA)))
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+# 12. pivot and display results by proportion to look for low variance features
+df_hate_crime[,12:48] %>%
+  pivot_longer(cols = -violent,names_to = "feature", values_to = "value") %>% 
+  group_by(violent, feature) %>% 
+  summarise(prop = sum(value)/nrow(df_hate_crime)) %>% 
+  filter(prop < 0.01)
+
+# 13. drop the features that do not contribute meaningfully
+df_hate_crime <- df_hate_crime %>% 
+  select(-offense_NvManslaughter, -offense_Rape, -offense_Robbery, -location_Cyberspace, -location_BarRestaurant, -location_EducationInstitution, -location_EntertainmentVenue, -offense_Arson, -offense_Intimidation, -offense_Kidnapping, -offense_Murder,-offense_AnimalCruelty, -location_Jail, -location_TransportationTerminal, -location_Medical, -offense_SexualCrime, -offense_AggAssault)
+```
+
+
+## DATA EXPLORATION
+
+
+```{r}
+###################### DATA EXPLORATION ###############################
+# 1. show the overall proportion of violent hate crimes
+
+df_hate_crime %>% 
+  mutate(`Hate Crime` = ifelse(violent == 1, "Violent", "Non-Violent")) %>% 
+  group_by(`Hate Crime`) %>% 
+  summarise(Count = n(), Proportion = round(Count / nrow(df_hate_crime),3)) %>% 
+  kable(format = "html", 
+        caption = "Relative frequency and proportion of violent and non-violent hate crimes.") %>% 
+  kable_styling(bootstrap_options = c("hover"))
+```
+Overall, the proportion of hate crimes from 1991 to 2022 in the dataset designated as __violent__ by the FBI's criterion is fairly low at only 13.4%, leaving the vast proportion of hate crimes designated non-violent (86.6%).
+
+Previous studies of hate crimes have revealed temporal and geographic variation in biases as well as clustering of hate crimes temporally and geographically (Jendryke and McClure 2021, King 2019). Thus, it would be helpful to explore whether similar trends are present in these data.
+
+
+### Have violent hate  crimes varied by year?
+```{r, fig.cap="Figure 1. Violent hate crimes have declined over time."}
+# Have violent hate  crimes varied by year?
+
+df_hate_crime %>% 
+  select(year, violent) %>% 
+  group_by(year) %>% 
+  summarize(Proportion = mean(violent), SE = sd(violent)/sqrt(n())) %>% 
+  ggplot(aes(x = as.factor(year), y = Proportion)) +
+    geom_path(group = 1, color = "cadetblue") +
+    geom_point(col = "cadetblue", size = 3) + 
+    geom_errorbar(aes(ymin = Proportion - SE, ymax = Proportion + SE), width = 0) + 
+    theme_bw() + 
+    labs(x = "Year",
+         y = "Proportion of All Hate Crimes",
+         title = "Proportion of all Hate Crimes Designated Violent",
+         subtitle = "1991 - 2022") + 
+   theme(axis.text.x=element_text(angle = -90, hjust = 0))
+```
+
+
+### Have violent hate crimes varied by month?
+```{r, fig.cap="Figure 2. Violent hate crimes peak during mid-summer."}
+# Have violent hate crimes varied by month?
+
+df_hate_crime %>% 
+  select(month, violent) %>% 
+  group_by(month) %>% 
+  summarize(Proportion = mean(violent), SE = sd(violent)/sqrt(n())) %>% 
+  ggplot(aes(x = as.factor(month), y = Proportion)) +
+    geom_path(group = 1, color = "cadetblue") +
+    geom_point(col = "cadetblue", size = 3) + 
+    geom_errorbar(aes(ymin = Proportion - SE, ymax = Proportion + SE), width = 0) + 
+    theme_bw() + 
+    labs(x = "Month",
+         y = "Proportion of All Hate Crimes",
+         title = "Proportion of all Hate Crimes Designated Violent",
+         subtitle = "By Month 1991 - 2022") + 
+   theme(axis.text.x=element_text(angle = -90, hjust = 0))
+```
+
+
+### What is the distribution of violent hate crimes by region?
+```{r,  fig.cap="Figure 3. Violent hate crimes against US nationals occur most frequently outside the US."}
+# What is the distribution of violent hate crimes by region?
+# make a dataset for plotting
+catData <- df_hate_crime %>%
+  select_if(is.character) %>% 
+  cbind(df_hate_crime$violent) %>% 
+  rename(violent = `df_hate_crime$violent`)
+
+catData %>% 
+  group_by(region_name) %>% 
+  summarise(Proportion = mean(violent)) %>% 
+  ggplot(aes(y = Proportion, x = fct_reorder(region_name, Proportion))) +
+    geom_col(position = "dodge", fill = "gold", color = "cadetblue") + 
+    labs(title = "U.S. Region",
+        x = "",
+        y = "Proportion of All Hate Crimes Identified as Violent") + 
+  coord_flip() + 
+  theme_bw()
+```
+
+
+### What is the distribution of violent hate crimes by state?
+```{r, fig.height=8, fig.cap="Figure 4. The highest proportion of Violent hate crimes occur in Alaska, followed by Foreign Soil."}
+# What is the distribution of violent hate crimes by state?
+
+catData %>% 
+  group_by(state_abbr) %>% 
+  summarise(Proportion = mean(violent)) %>% 
+  ggplot(aes(y = Proportion, x = fct_reorder(state_abbr, Proportion))) +
+    geom_col(position = "dodge", fill = "gold", color = "cadetblue") + 
+    labs(title = "U.S. State",
+        x = "",
+        y = "Proportion of All Hate Crimes Identified as Violent") + 
+  coord_flip() + 
+  theme_bw()
+```
+
+
+```{r,fig.height=9, echo=FALSE, results='hide', include=FALSE}
+# Are there any trends in Violent Hate Crimes Across the Location, Offense, or Victim Type Features?
+# (not displayed)
+
+df_hate_crime %>%
+  select_if(is.numeric) %>% 
+  select(-year, -victim_count, -total_offender_count, -month) %>%       ## visualized separately
+  group_by(violent) %>% 
+  summarise_all(mean) %>% 
+  gather(-violent, key = "Variable", value = "Value") %>% 
+  ggplot(aes(x = as.factor(violent), y = Value, fill = as.factor(violent))) +
+    geom_col(position = "dodge") + 
+    labs(title = "Proportion of Hate Crimes Across Various Features",
+        x = "",
+        y = "Proportion of Hate Crimes",
+        fill = "Violent Hate Crime") +
+  scale_fill_manual(values = c("cadetblue", "gold"), labels = c("True", "False")) + 
+  theme_grey() +
+  theme(legend.position = "bottom",
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) + 
+  facet_wrap(~Variable, ncol = 6)   ## Removed the free_y scale so we can better see where the gold bar is higher than the blue.
+```
+
+
+Overall, in the 3 decades of data included in this dataset, it seems as if there has been a slight decline in the proportion of violent hate crimes over time with stabilization over the last 2 decades. Summer months, particularly around the 4th of July, tend to be peak for the highest proportion of violent hate crimes, with the lowest occurring in the winter months. Similarly, there is not a clean geographic trend, except that the largest proportion of violent hate crimes appear to occur outside of the US on foreign soil. This could make either temporal or geographic predictions problematic and may suggest that it is necessary to explore other features in the dataset as well. 
+
+One feature of particular importance is reporting agency. Earlier studies have not focused as much on this feature, but because these data have been compiled by FBI, we have the unique opportunity to look at that here. Additionally, we can look for any effects of population size on the frequency of violent hate crimes.
+
+
+### What is the distribution of violent hate crimes by reporting agency?
+```{r, fig.cap="Figure 5. Violent Hate Crimes are most often reported by Federal Agencies, followed by City and Tribal."}
+# What is the distribution of violent hate crimes by reporting agency?
+
+catData %>% 
+  group_by(agency_type_name) %>%
+  summarise(Proportion = mean(violent)) %>% 
+  ggplot(aes(y = Proportion, x = fct_reorder(agency_type_name, Proportion))) +
+    geom_col(position = "dodge", fill = "gold", color = "cadetblue") + 
+    labs(title = "Reporting Agency Type",
+        x = "",
+        y = "Proportion of All Hate Crimes Identified as Violent") + 
+  coord_flip() + 
+  theme_bw()
+```
+
+
+```{r,fig.height=9, echo=FALSE, results='hide', include=FALSE}
+# Any differences in the numbers of victims and/or offenders? (not displayed)
+
+df_hate_crime %>%
+  select_if(is.numeric) %>% 
+  select(violent, victim_count, total_offender_count) %>%       ## visualized separately
+  group_by(violent) %>% 
+  summarise_all(mean) %>% 
+  gather(-violent, key = "Variable", value = "Value") %>% 
+  ggplot(aes(x = as.factor(violent), y = Value, fill = as.factor(violent))) +
+    geom_col(position = "dodge") + 
+    labs(title = "Mean Numbers of Offenders & Victims by Type of Hate Crime",
+        x = "",
+        y = "Mean Value",
+        fill = "Violent Hate Crime") +
+  scale_fill_manual(values = c("cadetblue", "gold"), labels = c("True", "False")) + 
+  theme_grey() +
+  theme(legend.position = "bottom",
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) + 
+  facet_wrap(~Variable)   ## Removed the free_y scale so we can better see where the gold bar is higher than the blue.
+```
+
+
+### What is the distribution of violent hate crimes relative to the population size where the crime occurred?
+```{r, fig.cap="Figure 6. Violent hate crimes have the highest frequency in larger-sized cities over 100,000."}
+# What is the distribution of violent hate crimes relative to the population size where the crime occurred?
+
+catData %>% 
+  group_by(population_description) %>% 
+  summarise(Proportion = mean(violent)) %>% 
+  ggplot(aes(y = Proportion, x = fct_reorder(population_description, Proportion))) +
+    geom_col(position = "dodge", fill = "gold", color = "cadetblue") + 
+    labs(title = "Population Size Where Crime Occurred",
+        x = "",
+        y = "Proportion of All Hate Crimes Identified as Violent") + 
+  coord_flip() + 
+  theme_bw()
+```
+
+
+One of the features about offenders in the dataset that could be an obvious choice for exploration is the race of the offender. There was approximately a 9% difference in violent crimes between Black and White offenders. Similarly, there was approximately a 10% difference in violent crimes between Latino and Non-Latino offenders. Other observations about offenders from the dataset is that about 15% more violent hate crimes are committed by multiple offenders vs. single offenders in an incident.
+
+### Who is committing the largest proportion of violent hate crimes?
+```{r, fig.cap="Figure 7. Largest differences in the proportion of violent hate crimes between Black and White offenders."}
+# Who is committing the largest proportion of violent hate crimes?
+# race:
+
+catData %>% 
+  group_by(offender_race) %>% 
+  summarise(Proportion = mean(violent)) %>% 
+  filter(!is.na(offender_race)) %>% 
+  ggplot(aes(y = Proportion, x = fct_reorder(offender_race, Proportion))) +
+    geom_col(position = "dodge", fill = "gold", color = "cadetblue") + 
+    labs(title = "Race of Offender",
+        x = "",
+        y = "Proportion of All Hate Crimes Identified as Violent") + 
+  coord_flip() + 
+  theme_bw()
+```
+
+
+```{r, fig.cap="Figure 8. Largest diferences in the proportion of violent hate crimes between Latino and Non-Latino offenders."}
+# ethnicity:
+
+catData %>% 
+  group_by(offender_ethnicity) %>% 
+  summarise(Proportion = mean(violent)) %>% 
+  filter(!is.na(offender_ethnicity)) %>% 
+  ggplot(aes(y = Proportion, x = fct_reorder(offender_ethnicity, Proportion))) +
+    geom_col(position = "dodge", fill = "gold", color = "cadetblue") + 
+    labs(title = "Ethnicity of Offender",
+        x = "",
+        y = "Proportion of All Hate Crimes Identified as Violent") + 
+  coord_flip() + 
+  theme_bw()
+```
+
+
+```{r, fig.cap="Figure 9. Violent hate crimes occur more often with multiple offenses."}
+# multiple offenses:
+
+df_hate_crime %>% 
+  mutate(multiple_offense = as.factor(ifelse(multiple_offense == 1, "Single", "Multiple"))) %>% 
+  group_by(multiple_offense) %>% 
+  summarise(Proportion = mean(violent)) %>% 
+  filter(!is.na(multiple_offense)) %>% 
+  ggplot(aes(y = Proportion, x = fct_reorder(multiple_offense, Proportion))) +
+    geom_col(position = "dodge", fill = "gold", color = "cadetblue") + 
+    labs(title = "Number of Offenses Committed Simultaneously",
+        x = "",
+        y = "Proportion of All Hate Crimes Identified as Violent") + 
+  coord_flip() + 
+  theme_bw()
+```
+
+
+```{r, echo=FALSE, results='hide', include=FALSE}
+# Multiple Bias Committed (not displayed)
+
+df_hate_crime %>% 
+  mutate(multiple_bias = as.factor(ifelse(multiple_bias == 1, "Single", "Multiple"))) %>%   
+  group_by(multiple_bias) %>% 
+  summarise(Proportion = mean(violent)) %>% 
+  filter(!is.na(multiple_bias)) %>% 
+  ggplot(aes(y = Proportion, x = fct_reorder(multiple_bias, Proportion))) +
+    geom_col(position = "dodge", fill = "gold", color = "cadetblue") + 
+    labs(title = "Multiple Bias (Multiple Groups Targeted Simultaneously)",
+        x = "",
+        y = "Proportion of All Hate Crimes Identified as Violent") + 
+  coord_flip() + 
+  theme_bw()
+```
+
+
+```{r}
+# Note: 373 different combination of Biases(hate crime motivator)
+# unique(df_hate_crime$bias_desc)
+```
+
+
+### What is the distribution of violent hate crimes by bias description?
+```{r, fig.cap="Figure 10. Racial bias makes up the highest proportion of all hate crimes."}
+# What is the distribution of violent hate crimes by bias description?
+
+df_hate_crime %>%
+  select_if(is.numeric) %>% 
+  select(violent, bias_race, bias_disability, bias_gender, bias_sex_orient, bias_christian, bias_other_religion, bias_jewish) %>%       ## visualized separately
+  group_by(violent) %>% 
+  summarise_all(mean) %>% 
+  gather(-violent, key = "Variable", value = "Value") %>% 
+  ggplot(aes(x = as.factor(violent), y = Value, fill = as.factor(violent))) +
+    geom_col(position = "dodge") + 
+    labs(title = "Mean Numbers of Biases by Hate Crime Type",
+        x = "",
+        y = "Mean Value",
+        fill = "Violent Hate Crime") +
+  scale_fill_manual(values = c("cadetblue", "gold"), labels = c("True", "False")) + 
+  theme_grey() +
+  theme(legend.position = "bottom",
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) + 
+  facet_wrap(~Variable) 
+```
+
+
+
+```{r, results='hide'}
+#################### FINAL DATA PREP STEPS. ########################
+# Examining missing data and Final Cleaning Steps.
+
+# Frequency encoding Agency type, state abbreviation, and region name.
+
+cols2keep <- c("agency_type_name", 
+               "state_abbr", 
+               "region_name",
+               "population_description")
+
+temp <- df_hate_crime[, names(df_hate_crime) %in% cols2keep]
+
+
+## This is fine, does what it should. 
+add_freq <- function(data, column_name) {
+  # Compute frequencies, including NAs
+  frequency_map <- table(data[[column_name]], useNA = "always")
+  
+  data[[column_name]] <- frequency_map[match(data[[column_name]], names(frequency_map))]
+
+  return(data)
+}
+
+# Loop through all columns and add frequency encoding columns (including NAs) -- Fine, does as it should.
+for (col in names(temp)) {
+  temp <- add_freq(temp, col)
+}
+df_hate_crime2 <- df_hate_crime 
+## Replace columns to keep in the original dataset:
+for (c in 1:length(cols2keep)) {
+  df_hate_crime2[, cols2keep[c]] <- temp[, cols2keep[c]]
+}
+
+# To re-associate match frequencies from table()
+# table(df_hate_crime$agency_type_name)
+```
+
+
+```{r, eval=FALSE, include=FALSE, results='hide'}
+# Offender race and Ethnicity, dropped due to extreme missingness and an inability to impute the missing data
+# Date dropped because month and year are included separately
+
+df_hate_crime2 %>% 
+  drop_na() %>% 
+  select(violent) %>% 
+  table()
+
+df_hate_crime2 %>% 
+  select(violent) %>% 
+  table()
+
+apply(X = is.na(df_hate_crime), MARGIN = 2, FUN = sum)
+```
+
+
+```{r}
+# Final Cleaned Dataset:
+
+hate_clean <- df_hate_crime2 %>% 
+  select(-offender_ethnicity, -offender_race, -incident_date, -bias_desc, -state_abbr, -month)
+```
+
+
+### Summary Statistics for the dataset after preparation and encoding.
+```{r, echo=FALSE, eval = TRUE}
+# make a summary statistics table for all features in the final data set
+
+hate_clean %>% 
+  select(-population_description, -agency_type_name, -region_name, -year) %>% 
+tbl_summary( 
+            statistic = list(
+              all_continuous() ~ "{mean} ({sd})", 
+              all_categorical() ~ "{n} / {N} ({p}%)"),
+            missing_text = "NA")
+```
+
+
+## EXPERIMENTATION AND RESULTS
+
+
+## CORRELATION
+
+
+One key element of exploratory data analysis is to assess the degree to which multicollinearity exists among the predictors. High multicollinearity has the potential to lead to overfitting, which is where the model fits well to training data but poorly to test data lowering the predictive usefulness of the model. 
+
+Here I assessed multicollinearity among the predictors as well as the response variable, using a Pearson's pairwise correlation test. I found Aggravated assault and Robbery are highest positive correlated with Violent Hate Crime, and Intimidation and Vandalism are lowest negative correlated with Violent Hate Crime. However, overall correlation in the dataset among the predictors was quite low and therefore multicollinearity is not a high concern based on these data.
+
+
+```{r, eval = T, echo = F}
+###################### EXPERIMENTATION & RESULTS ###############################
+
+###### CORRELATION ######
+
+corrMat <- cor(hate_clean)
+correlation <- data.frame(corrMat[,8])
+names(correlation) <- "Correlation with Target"
+correlation %>% 
+  arrange(desc(`Correlation with Target`)) %>% 
+  filter(`Correlation with Target` < 1 & `Correlation with Target` > 0.1 | `Correlation with Target` < -0.1) %>%     ## Don't show correlation with itself
+  kableExtra::kable()
+```
+
+
+```{r, figure.height=9}
+#corrplot(corrMat)
+```
+
+
+### Linear Discriminant Analysis (LDA)
+
+
+Early attempts to run logistic regression analysis with cross-validation (CV) failed to converge and since multicollinearity was not found to be of primary concern, this suggested that there were still too many predictors relative the number of observation or too many predictors with effectively zero variance. With 241,663 observations and only 34 predictors at this stage, it seemed more likely that zero variance features were the culprit. Thus, I leveraged the `nearZeroVar()` function as part of LDA in R to perform feature reduction.
+
+Linear discriminant analysis works like a principle component analysis, in that it compartmentalizes variance across all features with regard to an outcome variable. LDA can also be used to aid in feature reduction when the number of features is too high to perform meaningful machine learning analysis. Note that after analysis with LDA all variables with near zero variance were removed. This reduced the dataset from 39 to 27 features.
+
+
+```{r}
+# perform an LDA specifically just to drop any more features with near zero variance
+
+zero_var_df <- hate_clean[, -nearZeroVar(hate_clean)]
+```
+
+
+## LOGISTIC REGRESSION
+
+
+### Data Partitioning
+
+
+For logistic regression data partitioning was executed to allow for a test of model accuracy. The datasets were split into training and testing sets, using a 75:25 ratio.
+
+
+```{r}
+# split the data into 75% training, 25% testing sets
+
+split = sample.split(zero_var_df$violent, SplitRatio = .75)
+train = subset(zero_var_df, split==TRUE)
+test = subset(zero_var_df, split==FALSE)
+```
+
+
+### Training the model
+
+
+The first step in machine learning is to train a model on the larger partition. Here the full model was fitted on the training dataset using the `glm()` function in R to fit a logistic regression using whether a hate crime was designated as violent as the response. Prior attempts had led to convergence issues as well as overfitting which were resolved through proper encoding as well as feature reduction with LDA. However, the best way to ensure no overfitting is through k-fold CV of the model.
+
+Ten-fold cross-validation was used to prevent overfitting of the logistic regression model. CV is an effective way to prevent overfitting because the training dataset is subdivided into k-folds where each fold is independently tested for accuracy. The average is then returned, allowing the user to assess the overall performance of the training dataset. Thus, with a 10-fold CV 10% of the training dataset is subsetted each round to become a test fold. CV was executed using the `caret` package.
+
+
+```{r}
+###### LOGISTIC REGRESSION ######
+
+# set the 10-fold CV
+
+trainCV <- trainControl(method="cv", 
+                          number=10, 
+                          savePredictions="all",
+                          classProbs=TRUE)
+```
+
+
+```{r, warning=FALSE, message=FALSE}
+# turn violent_crimes into a factor
+train2 <- train
+# scale all variable except the response 
+train2[,c(1:4, 6:20)] <- scale(train2[,c(1:4, 6:20)])
+
+# re-label values of outcome variable for train_df as factor for the CV
+train2$violent[train2$violent==1] <- "Violent"
+train2$violent[train2$violent==0] <- "Nonviolent"
+
+# table(df_hate_train2$violent, useNA = "always")
+
+# Specify logistic regression model to be estimated using training data and k-fold cross-validation process
+mod2 <- train(violent ~., 
+              data = train2,
+              method="glm", 
+              family=binomial, 
+              trControl=trainCV)
+
+# Print information about model
+# print(mod2)
+```
+
+
+The resulting model fit 19 predictors across 181,247 observations to predict violent hate crimes relative to non-violent ones. After 10-fold CV accuracy is relatively good at 88.8% but Cohen's Kappa is only fair at 41%, which suggests that there may be collinearity or other issues yet with the model.
+
+At this stage given that logistic regression cannot be tuned, and the CV was not able to resolve issues with overfitting in logistic regression. I believe it is advisable to consider other machine learning classifier algorithms, instead of logistic regression. The assumptions for logistic regression include a binary dependent variable, independent observations, no multicollinearity among predictors, linearity, and sufficient sample size. Although it is impossible to know exactly which of these assumptions are being violated, given Cohen's Kappa multicollinearity is the most likely culprit, despite the results seen in the Pearson's correlation. 
+
+Given that these results are not reliable, I did not perform model validation nor interpretation, and focused my efforts on finding a more suitable machine learning algorithm.
+
+
+## RANDOM FOREST
+
+
+Random forest is an ensemble learning classifier that is based on single binary decision trees. Subsets of the data are used randomly to construct trees where each split of the node maximizes variances explained by the predictors. Random forest was chosen because it can handle both continuous and categorical variables for classification, and the complexity of the random forest means that it can be more robust both collinearity as well as overfitting. Further, random forest often has out-of-box (OOB) performance, making it a natural choice for novice users such as myself. For skilled users it offers a number of hyper parameters that can be tuned to optimize performance.
+
+
+```{r}
+###### RANDOM FOREST ######
+
+# turn violent into a factor
+train3 <- train2 
+train3$violent <- as.factor(train3$violent)
+
+# train the CV (did not use)
+trainCV <- trainControl(method="cv", 
+                          number=1, 
+                          savePredictions="all",
+                          classProbs=TRUE)
+
+# fit the random forest model as OOB
+rf_mod <- randomForest::randomForest(violent ~ .,
+                                     data = train3,
+                                     ntree = 200,
+                                     importance = TRUE,
+                                     do.trace = FALSE,
+                                     type = "classification")
+
+# print final model and OOB error rate
+# rf_mod$finalModel
+# rf_mod$err.rate
+```
+
+
+An OOB Random Forest was fitted to the training dataset on the classifier violent versus non-violent. The forest was allowed to grow 200 trees deep (`ntree = 200`) due to computational constraints. All other hyperparameters were default. After allowing the forest to grow the OOB model only had 10.45% total error but there was a large difference in the error rates between the two classes. For the non-violent class error rate declined to 2.9%, but for the violent class error rate was still very high at 59%. This was likely due to the large discrepancy in proportion of violent versus non-violent classes in the dataset.
+
+Still a better test of a models performance is to fit the model against the testing dataset. Total accuracy was surprisingly low at 81% with a sensitivity of 73% and specificity of 82%, thus the balanced accuracy was only 78%. This suggests that the model struggled to predict both classes, but especially violent. This can be seen in the low positive predictive value of 39%. Additionally, the McNemar's Test is significant; thus, the classifiers have different error rates, which I observed in the training model as well. Again, this is likely because I did not start out with closer to 1:1 ratio of the classifiers. Thus, this is not surprising.
+
+
+```{r}
+# make predictions on the testing set for accuracy
+
+pred <- predict(rf_mod, newdata = test[, -5])
+test$violent[test$violent==1] <- "Violent"
+test$violent[test$violent==0] <- "Nonviolent"
+test$violent <- as.factor(test$violent)
+
+# display the confusion matrix
+confusionMatrix(pred, reference = test$violent, positive = "Violent")
+```
+
+
+```{r, fig.cap="Figure 11. Receiver-operator curve for the OOB random forest model.", warning=FALSE, message=FALSE}
+# do the predictions again but store as a dataframe this time
+pred <- as.data.frame(predict(rf_mod, newdata = test[, -5], type = "prob"))
+# get the ROC score
+score <- roc(response = test$violent, pred$Violent, levels = c("Nonviolent","Violent"))
+# display the ROC
+plot(score)
+```
+
+
+```{r, fig.height=6, fig.cap="Figure 12. Percent of overall feature importance from OOB Random Forest."}
+# extract the important features
+important <- as.data.frame(rf_mod$importance)
+
+# display the important features
+ggplot(important, aes(y = Violent, x = fct_reorder(rownames(important), Violent))) +
+  geom_col(color = "cadetblue", fill = "gold") +
+  coord_flip() +
+  labs(x = "Features",
+       y = "Overall Importance in Model (%)",
+       title = "Feature Importance")+
+  theme_bw()
+```
+
+
+The receiver-operator curve is Figure 11 shows the intermediate accuracy of the model. Although the model is not performing poorly exactly, it is not performing at a rate yet that would permit deployment.
+
+One aspect of the random forest as it stands is that we can use it to assess feature importance. As shown in Figure 12, the feature with highest importance albeit, very low importance of only .12% is the number of total offenders. This was followed by whether vandalism was also committed, whether the offense occurred along a roadside, sidewalk, or parking lot, and whether a weapon was involved in the offense. The latter is unsurprising given that these are violent hate crimes.
+
+
+# CONCLUSION
+
+
+The OOB random forest model was robust enough to train the model. The OOB model has intermediate accuracy, although the classifiers are performing differently. The severe skew in the percent of violent hate crime (13.4%) out of total hate crimes likely has made it challenging for any classification algorithm to positively identify instances of violent hate crime. Despite performing two types of encoding -- one-hot on those variables that can have multiple observations, and frequency encoding for all other categorical variables -- there was sufficient noise in the dataset to render the algorithm unable to differentiate optimally. However, this is often the case with classifier algorithms, especially when the starting proportions are so skewed. Random forest is generally more robust than logistic regression but OOB and without tuning there is still a lot of room for improvement.
+
+That said, the goal of models need not be to only predict but also to better understand what has happened in the past. From this model and the data exploration, I am able to identify with moderate confidence features of interest that are worth monitoring. For example, police and hate crime monitoring agencies could choose to look more closely at violent crimes involving multiple offenders and weapons along roadside, sidewalks, or parking lots to see if a possible hate-based motive can be found. Additionally, it is worth noting that there are surprisingly few differences between the three hate crime biases in the features of importance according to the OOB random forest model.
+
+Overall, I can have relative confidence in these conclusions because I took great pains to clean the data correctly, to correct for initial overfitting of the model that I observed, by performing appropriate encoding on the categorical variables, and by changing to the more robust classification algorithm, which allowed me to ensure that I am not overfitting. Next steps would need to include tuning the random forest model, and / or exploring other classification algorithms such as neural networks with a proven track record of handling noisy datasets.
+
+# CODE APPPENDIX  
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```
+
+# REFERENCES
+
+
+
+
