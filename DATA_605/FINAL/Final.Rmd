@@ -1,0 +1,477 @@
+---
+title: "Data_605_Final"
+author: "Alex Khaykin"
+date: "2024-05-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+#loading the libraries
+
+library(tidyverse)
+library(dplyr)
+library(MASS, exclude = "select")
+```
+
+Your final is due by the end of day on 19 May This project will show off your ability to understand the elements of the class. You are to register for Kaggle.com (free) and compete in the House Prices: Advanced Regression Techniques competition. https://www.kaggle.com/c/house-prices-advanced-regression-techniques . I want you to do the following.
+
+Pick one of the quantitative independent variables from the training data set (train.csv) , and define that variable as X. Make sure this variable is skewed to the right! Pick the dependent variable and define it as Y.
+
+# LOADING DATA
+
+```{r}
+# to load the train dataset
+
+train  = read.csv('C:\\Users\\akhay\\OneDrive\\Documents\\DATA_SCIENCE\\DATA 605\\Final\\train.csv', header = TRUE)
+```
+
+
+```{r}
+# LotArea is the independent variable with right skewness
+
+ggplot(train, aes(x = LotArea)) +
+      geom_histogram()
+```
+# Pick one of the quantitative independent variables from the training data set (train.csv) , and define that variable as X. 
+
+```{r}
+# to assign X variable to LotArea
+
+X <- train$LotArea
+```
+
+# Pick the dependent variable and define it as Y.
+
+```{r}
+# SalePrice is the dependent variable with right skewness 
+
+ggplot(train, aes(x = SalePrice)) +
+      geom_histogram()
+```
+
+```{r}
+# to assign Y variable to SalePrice
+
+Y <- train$SalePrice
+```
+
+# Probability
+
+Calculate as a minimum the below probabilities a through c. Assume the small letter “x” is estimated as the 3d quartile of the X variable, and the small letter “y” is estimated as the 2d quartile of the Y variable. Interpret the meaning of all probabilities. In addition, make a table of counts as shown below.
+
+a. P(X>x | Y>y) 
+
+b. P(X>x, Y>y) 
+
+c. P(X<x | Y>y)
+
+```{r}
+# to see quartiles for X
+
+summary(X)
+```
+
+```{r}
+# to assign 3rd quartile new variable x_3q
+
+x_3q <- summary(X)["3rd Qu."]
+```
+
+```{r}
+# to see quartiles for Y
+
+summary(Y)
+```
+
+```{r}
+# to assign 2nd quartile to new variable y_2q, median(163000)
+
+y_2q <- summary(Y)["Median"]
+```
+
+a. P(X>x | Y>y)
+
+```{r}
+# to define a new binary variable X_1 based on the condition that the original variable X is greater than some threshold value x_3q
+# to define another binary variable Y_1 based on the condition that the original variable Y is greater than another threshold value y_2q
+# to count how many times both X_1 and Y_1 are equal to 1
+# to compute the sum of Y_1, which represents the total count of occurrences where Y_1 is true
+# we calculate the ratio n/d (numerator / denominator)
+
+X_1 <- X > x_3q
+Y_1 <- Y > y_2q
+n <- sum(X_1 & Y_1) 
+d <- sum(Y_1)
+n/d
+```
+b. P(X>x, Y>y)
+
+```{r}
+# to count how many times both X_1 and Y_1 are equal to 1
+# to represent the total number of rows in the dataset train.
+# to calculate the ratio
+
+n <- sum(X_1 & Y_1) 
+d <- nrow(train)
+n/d
+```
+
+c. P(X<x | Y>y)
+
+```{r}
+# to create the condition that the original variable X is less than some threshold value x_3q
+# to create a another variable Y_2 based on the condition that the original variable Y is greater than another threshold value y_2q
+# to count how many times both X_2 and Y_1 are equal to 1
+# to computes the sum of Y_1, which represents the total count of occurrences where Y_1 is true
+# to calculate the ratio
+
+X_2 <- X < x_3q
+Y_2 <- Y > y_2q
+n <- sum(X_2 & Y_1) 
+d <- sum(Y_1)
+n/d
+```
+
+
+```{r}
+# to build the table
+
+table_count <- matrix(0, nrow = 3, ncol = 3)
+colnames(table_count) <- c("<=2d quartile", ">2d quartile", "Total")
+rownames(table_count) <- c("<=3d quartile", ">3d quartile", "Total")
+
+table_count[1, 1] <- sum(X <= x_3q & Y <= y_2q)  
+table_count[1, 2] <- sum(X <= x_3q & Y > y_2q)  
+table_count[1, 3] <- table_count[1, 1] + table_count[1, 2]        
+table_count[2, 1] <- sum(X > x_3q & Y <= y_2q)   
+table_count[2, 2] <- sum(X > x_3q & Y > y_2q)   
+table_count[2, 3] <- table_count[2, 1] + table_count[2, 2]               
+table_count[3, 1] <- table_count[1, 1] + table_count[2, 1]
+table_count[3, 2] <- table_count[1, 2] + table_count[2, 2]
+table_count[3, 3] <- table_count[1, 3] + table_count[2, 3]
+
+print(table_count)
+```
+
+```{r}
+# to check the sums of each variable
+
+sum(X_1)
+sum(Y_1)
+sum(X_2)
+sum(Y_2)
+```
+
+
+# Does splitting the training data in this fashion make them independent?
+
+No, does not change the relationship between X and Y, thus it does not make them independent of one another.
+
+
+Let A be the new variable counting those observations above the 3d quartile for X, and let B be the new variable counting those observations above the 2d quartile for Y. Does P(A|B)=P(A)P(B)? Check mathematically, and then evaluate by running a Chi Square test for association.
+
+```{r}
+# assigning new variable A and B
+
+A <- X > x_3q
+B <- Y > y_2q
+
+#  probability(A|B)
+
+P_A_given_B <- sum(A * B) / sum(B)
+P_A_given_B
+```
+
+```{r}
+P_A <- sum(A) / length(A)
+P_B <- sum(B) / length(B)
+P_A * P_B
+```
+# Does P(A|B)=P(A)P(B)?
+
+No the probability of A | B is 37.9 and probability of A * B is 12.4%, and they are not equal mathematically. 
+
+# Chi Square test for association.
+
+```{r}
+# to create chi-squared test on the contingency table, to tests the null hypothesis
+
+chi_test <- chisq.test(table(A, B))
+print(chi_test)
+```
+Given the p-value, we would reject the null hypothesis of A and B being equal.
+
+# Descriptive and Inferential Statistics. 
+
+Provide univariate descriptive statistics and appropriate plots for the training data set.  Provide a scatterplot of X and Y.  Provide a 95% CI for the difference in the mean of the variables.  Derive a correlation matrix for two of the quantitative variables you selected.  Test the hypothesis that the correlation between these variables is 0 and provide a 99% confidence interval.  Discuss the meaning of your analysis.
+
+## Provide univariate descriptive statistics and appropriate plots for the training data set
+
+```{r}
+# to see the summaries for both X and Y
+
+summary(X)
+summary(Y)
+```
+## Provide a scatterplot of X and Y
+
+```{r}
+# X is LotArea 
+# Y is SalePrice
+# to create a scatter plot
+
+ggplot(train, aes(x = X, y = Y)) +
+  geom_point() +  
+  labs(x = "LotArea", y = "SalePrice", title = "Scatter Plot of LotArea and SalePrice")
+```
+
+## Provide a 95% CI for the difference in the mean of the variables
+
+```{r}
+# to create a t test for 95% confidence interval
+
+t.test(X, Y, conf.level = 0.95)
+```
+95 percent confidence interval:
+ -174514.7 -166294.1
+
+
+## Derive a correlation matrix for two of the quantitative variables you selected
+
+```{r}
+# to create a new dataset with only the two variables LotArea and SalePrice
+# to create correlation martrix
+
+train2 <- train %>%  
+        dplyr::select(LotArea, SalePrice)
+
+corr_matrix = cor(train2)
+
+corr_matrix
+```
+
+## Test the hypothesis that the correlation between these variables is 0 and provide a 99% confidence interval.
+
+
+```{r}
+# to calculate the Pearson correlation coefficient between LotArea and SalePrice variables, along with a 99% confidence interval for the correlation
+
+corr_test <- cor.test(train2$LotArea, train2$SalePrice, method = "pearson", conf.level = 0.99)
+print(corr_test)
+```
+## Discuss the meaning of your analysis.
+
+Significant correlation between X and Y, because the P-value of 2.2e-16 is less than the .01 level of significance provided. Therefore we reject the null hypothesis.
+
+
+# Linear Algebra and Correlation
+
+
+Invert your correlation matrix. (This is known as the precision matrix and contains variance inflation factors on the diagonal.) Multiply the correlation matrix by the precision matrix, and then multiply the precision matrix by the correlation matrix. Conduct principle components analysis (research this!)  and interpret.  Discuss.
+
+
+## Invert your correlation matrix. (This is known as the precision matrix and contains variance inflation factors on the diagonal.)
+
+```{r}
+# to compute the inverse of the correlation matrix (corr_matrix) and assign it to the variable pres_matrix
+
+pres_matrix <- solve(corr_matrix)
+pres_matrix
+```
+
+## Multiply the correlation matrix by the precision matrix, and then multiply the precision matrix by the correlation matrix.
+
+```{r}
+# to calculate the product of the correlation matrix and its inverse
+
+round(corr_matrix %*% pres_matrix)
+```
+
+## Conduct principle components analysis (research this!)
+
+```{r}
+# to calculate the average correlation coefficient between all numeric variables in dataset train2
+
+mean(cor(train2))
+```
+
+## Conduct principle components analysis (research this!) and interpret. Discuss.
+
+```{r}
+# to perform principal component analysis (PCA) on the dataset train2 using the princomp function
+
+pca_res <- princomp(train2)
+pca_res$loadings
+```
+
+```{r}
+# to create summary of results from principal component analysis (PCA) performed on dataset train2
+
+summary(pca_res)
+```
+
+Principle Comp. 1 explains the larger proportion of the shared variance between the `LotArea` and `SalePrice` (0.986). Principle Comp. 2 explains the smaller proportion of the two variables (0.014) The loading explains how  much of the variation of the variables is explained by the components.
+
+
+# Calculus-Based Probability & Statistics
+
+Many times, it makes sense to fit a closed form distribution to data.  For your variable that is skewed to the right, shift it so that the minimum value is above zero.  Then load the MASS package and run fitdistr to fit an exponential probability density function.  (See  https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/fitdistr.html ).  Find the optimal value of  for this distribution, and then take 1000 samples from this exponential distribution using this value (e.g., rexp(1000, )).  Plot a histogram and compare it with a histogram of your original variable.   Using the exponential pdf, find the 5th and 95th percentiles using the cumulative distribution function (CDF).   Also generate a 95% confidence interval from the empirical data, assuming normality.  Finally, provide the empirical 5th percentile and 95th percentile of the data.  Discuss.
+
+
+## For your variable that is skewed to the right, shift it so that the minimum value is above zero.
+
+```{r}
+# to calculate summary of the values in the LotArea variable from the dataset train
+
+X <- train$LotArea
+summary(X)
+```
+I chose not to shift because the minimum value is above zero (1300).
+
+
+
+## Find the optimal value of λ for this distribution, and then take 1000 samples from this exponential distribution using this value (e.g., rexp(1000, λ)).
+```{r}
+# to estimate the rate parameter (λ) for an exponential distribution
+
+exp_prob_den <- fitdistr(X, "exponential")
+exp_prob_den
+
+lambda <- exp_prob_den$estimate
+lambda
+```
+
+```{r}
+# to generate a random sample of 1000 values from an exponential distribution
+
+samp <- rexp(1000, rate = lambda)
+```
+
+
+```{r}
+# to create a side-by-side comparison of histograms for the variable LotArea
+
+par(mfrow = c(1, 2))
+hist(X, main = "LotArea", xlab = "Value")
+hist(samp, main = "Exp. Dist. of Lot Area", xlab = "Value")
+```
+
+# Using the exponential pdf, find the 5th and 95th percentiles using the cumulative distribution function (CDF).   
+
+```{r}
+# to  calculate 5th percentile (lower quantile) and 95th percentile (upper quantile) of sample generated from exponential distribution
+
+quantile(samp, probs = c(0.05, 0.95))
+```
+
+# Also generate a 95% confidence interval from the empirical data, assuming normality
+
+```{r}
+# to calculate a 95% confidence interval 
+
+m <- mean(samp)
+s <- sd(samp)
+se <- s/sqrt(1000)
+
+lower <- m - 1.96 * se
+lower
+
+upper <- m + 1.96 * se
+upper
+```
+
+# Finally, provide the empirical 5th percentile and 95th percentile of the data.  Discuss.
+
+```{r}
+# to calculate 5th percentile (lower quantile) and 95th percentile (upper quantile) of variable X
+
+quantile(X, probs = c(0.05, 0.95))
+```
+The spread of the distribution of `LotArea` got a lot wider after exponentiation. As evidenced by the range of values in the middle 90% of the data. Additionally, `LotArea` was originally not normally distributed, and it is still not normally distributed after turning it into an exponential distribution, but is is more spread.
+
+
+# Modeling.  Build some type of regression  model and submit your model to the competition board.  Provide your complete model summary and results with analysis.  Report your Kaggle.com  user name and score.
+
+```{r}
+# to create new data frame train3 by selecting columns SalePrice, LotArea, LotFrontage, YearBuilt, YearRemodAdd, OverallQual, OverallCond, BldgType, BedroomAbvGr, GarageCars, and BsmtFinSF1
+# to replaces missing values in GarageCars and BsmtFinSF1 columns with zeros and remove any rows with missing values NA
+
+train3 <- train %>% 
+  dplyr::select(SalePrice, LotArea, LotFrontage, YearBuilt, YearRemodAdd, OverallQual, OverallCond, BldgType, BedroomAbvGr, GarageCars, BsmtFinSF1) %>% 
+  mutate(GarageCars = ifelse(is.na(GarageCars), 0, GarageCars), 
+         BsmtFinSF1 = ifelse(is.na(BsmtFinSF1), 0, BsmtFinSF1)) %>% 
+  drop_na()
+```
+
+```{r}
+# to fit a linear regression model (lm) with the natural logarithm of the SalePrice as the response variable and all other variables in the train3 dataset as predictors
+
+mod <- lm(log(SalePrice) ~ ., data = train3)
+
+summary(mod)
+```
+The coefficients represent the impact of each predictor variable on the log(SalePrice), such as the variable OverallQual is approximately 0.144, which means that for every one-unit increase in the overall quality rating, the log(SalePrice) increases by about 0.144 units. The Multiple R-squared value of 0.8232, shows that approximately 82.32% of the variance in the log(SalePrice) can be explained by the predictor variables in the model, suggesting that the model fits the data reasonably well.The Adjusted R-squared of 0.8213 adjusts for the number of predictors in the model, and is slightly lower than the Multiple R-squared which provides a more conservative estimate of the model’s fit. The F-statistic of 425.1 tests if any of the predictor variables significantly contribute to explaining the variance in the response variable. The p-value of < 2.2e-16 indicates strong evidence against the null hypothesis. And the model appears to be statistically significant.
+
+
+```{r, results='hide'}
+# to use step function on the model, resulting in a modified model 
+
+final <- step(mod)
+```
+
+
+```{r}
+# to create summary(final) of final model
+
+summary(final)
+```
+After stepping through the model, the final model is not significantly different from the initial regression model, indicating the initial fit was already a reasonable model. The only notable difference is in the F-statistic, went up from 425.1 to 460.7 now. Which would indicate that the final model's predictor variables do a better job of explaining the variance in the response variable.
+
+```{r}
+# to plot the final models performance 
+
+plot(final)
+```
+
+The Log of `SalePrice` yield a better linear regression with an adjusted r-squared of 0.82 in the train3 dataset, and assumptions that are largely met.
+Residuals vs. Fitted plot shows the residuals against the fitted values, linearity and homoscedasticity assumption met.
+Normal Q-Q plot compares the distribution of residuals to a normal distribution, normality of residuals assumption met.
+Scale-Location  plot examines the spread of residuals across the range of fitted values, homoscedasticity assumption met 
+Residuals vs. Leverage plot identifies influential observations that can significantly impact the regression coefficients, and finally the independence assumption has been met.
+
+```{r}
+# to reas int he test data CSV file named “test.csv,” then replaces missing values in the “GarageCars” and “BsmtFinSF1” columns with zeros using the mutate function
+
+test <- read.csv("C:\\Users\\akhay\\OneDrive\\Documents\\DATA_SCIENCE\\DATA 605\\Final\\test.csv")
+
+test <- test %>% 
+  mutate(GarageCars = ifelse(is.na(GarageCars), 0, GarageCars), 
+         BsmtFinSF1 = ifelse(is.na(BsmtFinSF1), 0, BsmtFinSF1))
+```
+
+```{r}
+# to predict house sale prices using the final regression model and the data from the “test.csv” file and  transforms the predictions by taking the exponential function that creates a data frame with columns “Id” and “SalePrice” 
+
+pred <- predict(final, newdata = test)
+pred <- exp(pred)
+df <- data.frame(test$Id, pred)
+names(df) <- c("Id", "SalePrice")
+head(df)
+```
+
+```{r}
+# to write the predictions from the df data frame to a CSV file named sample_submission.csv
+
+write.csv(df, file = "sample_submission.csv", row.names = FALSE, quote = FALSE)
+```
+
+# KAGGLE COMPETITION SUBMISSION SCORE
+
+sample_submission.csv
+
+Score: 0.17234
