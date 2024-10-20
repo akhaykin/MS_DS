@@ -1,0 +1,141 @@
+---
+title: "Assignment 1"
+author: "Alex Khaykin"
+date: "2024-10-19"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r, results='hide',message=FALSE,warning=FALSE}
+library(tidyverse)
+library(lubridate)
+library(ggplot2)
+library(corrplot)
+```
+
+
+
+# INTRO
+
+The landscape of modern business increasingly relies on data-driven decision-making, and effective analysis of sales data can significantly enhance operational efficiency and customer satisfaction. For my project, I focus on understanding the relationship between two critical factors influencing `Fulfilment_Speed`: `Order.Priority` and and other influeincing factors such as geography and the companies `Total.Revenue`. By employing a linear regression model, I aim to uncover patterns within my chosen dataset composed of 1,000 sales transactions, examining how these variables interact and impact overall sales outcomes.
+
+Order priority typically reflects the urgency and importance assigned to each sale, potentially impacting the fulfillment process and customer experience. Fulfillment speed, on the other hand, denotes the time taken to process and deliver an order. In a competitive market, optimizing both order priority and fulfillment speed is essential for meeting customer expectations and driving sales growth. Through linear regression analysis, we will explore whether order priority status can predict fulfillment speed, providing valuable insights for stakeholders looking to enhance their operational strategies.
+
+This project will articulate the statistical relationship between order priority and fulfillment speed and provide actionable recommendations for improving order management and fulfillment processes. By leveraging this analysis, businesses can make informed decisions to enhance their performance in a fast-paced market environment.
+
+# DATA
+
+Reading in the data downloaded from the site, and converting it to a data frame from where I will be unitizing R to run summary statistics to learn about the data and the information contained within. 
+
+```{r}
+sales_1000 <- read.csv("C:\\Users\\akhay\\OneDrive\\Documents\\DATA_SCIENCE\\DATA_622\\Assignments\\Assignment_1\\1000 Sales Records.csv")
+```
+
+
+## EDA
+
+The dataset comprises 1,000 entries with various attributes such as `Region`, `Country`, `Item.Type`, `Sales.Channel`, `Order.Priority`, `Order.Date`, and `Order.ID`, all stored as character types. The `Order.ID` values range significantly, indicating diverse transactions. Numeric columns like `Units.Sold`, `Unit.Price`, `Unit.Cost`, `Total.Revenue`, `Total.Cost`, and `Total.Profit` show substantial variability. For instance, `Units.Sold` ranges from 13 to 9,998, with a mean of 5,054, while `Total.Revenue` spans from 2,043 to 6,617,210, reflecting the wide range of sales activities captured in the dataset.
+
+### Summary
+
+This sections give the names of the colums(variable), and the basic statistics of the dataset.There seems to be no missing data in this dataset.
+
+```{r}
+summary(sales_1000)
+```
+To create a sub-set of all numeric data from the original dataset prior to creating the corroplot to test for overrelaction. 
+
+```{r}
+numeric_columns <- sales_1000 %>% 
+  select(Units.Sold, Unit.Price, Unit.Cost, Total.Revenue, Total.Cost, Total.Profit)
+correlation_matrix <- cor(numeric_columns, use = "complete.obs")
+```
+
+Creating a corroplot. As anticipated there is a strong correlation between units sold and total revenue, as well as units price and and total revenue. However, quite opposite when it comes to the relationship between units price and units sold.  
+
+```{r}
+corrplot(correlation_matrix, method = "color", type = "upper", 
+         tl.col = "black", tl.srt = 45, 
+         addCoef.col = "black", number.cex = 0.7)
+```
+
+The dataset contains 1,000 sales records, with 14 columns. However for the purpose of the question I am asking, I will be treating these as company records and dropping the following columns: ` Country`, `Order Id`. Additional y I will be making a new primary predictor variable `Fullfilment Speed`, which is the lag between `Order Date` and `Ship Date`, after which I will drop the two date columns entirely. I am treating this as the average fulfillment speed for each of the hypothetical companies and their records contained in the dataset. 
+
+```{r}
+sales_1000 <- sales_1000 %>% 
+  select(-Country, -Order.ID) %>% 
+  mutate(Order.Date=as.Date(Order.Date, format="%m/%d/%Y"), 
+         Ship.Date=as.Date(Ship.Date, format= "%m/%d/%Y"),
+         Fulfilment_Speed =as.numeric(Ship.Date - Order.Date)) %>% 
+  select(-Order.Date, -Ship.Date)
+```
+
+
+## VISUALIZATIONS
+
+### 1. Histogram of Fulfilment Speed
+This chart shows the distribution of fulfillment speeds. With a few exceptions, there is a approximately 20 occurrences in the dataset. 
+```{r}
+ggplot(sales_1000, aes(x = Fulfilment_Speed)) +
+  geom_histogram(binwidth = 1, fill = "blue", color = "black") +
+  labs(title = "Distribution of Fulfilment Speed", x = "Fulfilment Speed (days)", y = "Frequency")
+```
+
+### 2. Bar Plot of Item Types
+
+This chart shows the count of each item type.
+```{r}
+ggplot(sales_1000, aes(x = Item.Type)) +
+  geom_bar(fill = "green", color = "black") +
+  labs(title = "Count of Each Item Type", x = "Item Type", y = "Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+### 3. Box Plot of Unit Price by Sales Channel
+
+This chart compares the distribution of unit prices across different sales channels.
+```{r}
+ggplot(sales_1000, aes(x = Sales.Channel, y = Unit.Price)) +
+  geom_boxplot(fill = "orange", color = "black") +
+  labs(title = "Unit Price by Sales Channel", x = "Sales Channel", y = "Unit Price")
+```
+
+### 4. Scatter Plot of Total Revenue vs. Total Profit
+
+This chart shows the relationship between total revenue and total profit.
+```{r}
+ggplot(sales_1000, aes(x = Total.Revenue, y = Total.Profit)) +
+  geom_point(color = "purple") +
+  labs(title = "Total Revenue vs. Total Profit", x = "Total Revenue", y = "Total Profit")
+```
+
+# MODEL
+
+```{r}
+model_sales <- lm(Fulfilment_Speed ~ Order.Priority + Region + Total.Revenue + Sales.Channel, data = sales_1000)
+```
+
+## Model Summary
+
+```{r}
+summary(model_sales)
+```
+
+## Model Diagnostic Plots
+
+Model diagnostic plots show a robust model, with no violations of assumptions, although there are so possible outliers by Cooks Distance. 
+
+```{r}
+plot(model_sales)
+```
+
+# CONCLUSION
+
+I fitted the model to test whether fulfillment speed was affected by an orders priority, sales channel, geography, or the companies total revenue. I found that only high-priority orders have significantly faster fulfillment speed. Which suggests, that customers paying for medium priority are not receiving value for the shipping speed purchased while shopping. The region of delivery for the order was also significantly slower for the middle east, Northers Africa and Sub-Saharan Africa. Which points to that clients in these potential areas of sales need to be advised of potential slower fulfillment speeds. This is regardless of whether a customer requests and pays for a higher order priority at time of sale. Additionally, there was a marginally significant difference between sales channel with online orders being fulfilled nearly two day faster on average, after controlling for all other factors. It is interesting to note that, there is no significant affect of total revenue on fulfillment speed, which suggests that larger companies are not necessarily able to fulfill orders faster that smaller companies. This is contrary to what I would expect from companies like Amazon, which have build themselves around customer expectation of faster fulfillment speeds. This is likely because this dataset is fabricated and is not an accurate reflection of the true relationship between companies actual sales and the fulfillment speed that they are able to deliver. in Conclusion these simulated sales from 1000 orders may have been drawn from actual orders, hence the difference in fulfillment speed in geography and order priority. With the larger dataset, these relationships if true should be found again. If they they would not be found again, then it would suggest that my finding are the results of the small sample size of the smaller simulated dataset, and thus random chance and nothing more. 
