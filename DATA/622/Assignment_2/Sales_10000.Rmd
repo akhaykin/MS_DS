@@ -1,0 +1,131 @@
+---
+title: "Assignment 2"
+author: "Alex Khaykin"
+date: "2024-11-1"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, results='hide',message=FALSE,warning=FALSE}
+library(tidyverse)
+library(lubridate)
+library(ggplot2)
+library(corrplot)
+library(rpart)
+library(rpart.plot)
+library(caret)
+library(ranger)
+```
+
+# INTRO
+
+The landscape of modern business increasingly relies on data-driven decision-making, and effective analysis of sales data can significantly enhance operational efficiency and customer satisfaction. For my project, I focus on understanding the relationship between two critical factors influencing `Fulfilment_Speed`: `Order.Priority` and and other influencing factors such as geography and the companies `Total.Revenue`. By employing a linear regression model, I aim to uncover patterns within my chosen dataset composed of 1,000 sales transactions, examining how these variables interact and impact overall sales outcomes.
+
+Order priority typically reflects the urgency and importance assigned to each sale, potentially impacting the fulfillment process and customer experience. Fulfillment speed, on the other hand, denotes the time taken to process and deliver an order. In a competitive market, optimizing both order priority and fulfillment speed is essential for meeting customer expectations and driving sales growth. Through linear regression analysis, we will explore whether order priority status can predict fulfillment speed, providing valuable insights for stakeholders looking to enhance their operational strategies.
+
+This project will articulate the statistical relationship between order priority and fulfillment speed and provide actionable recommendations for improving order management and fulfillment processes. By leveraging this analysis, businesses can make informed decisions to enhance their performance in a fast-paced market environment.
+
+# DATA
+
+Reading in the data downloaded from the site, and converting it to a data frame from where I will be unitizing R to run summary statistics to learn about the data and the information contained within. 
+
+```{r}
+sales_10000 <- read.csv("C:\\Users\\akhay\\OneDrive\\Documents\\DATA_SCIENCE\\DATA_622\\Assignments\\Assignment_2\\10000 Sales Records.csv")
+```
+
+### Summary
+
+This sections give the names of the columns(variable), and the basic statistics of the dataset.There seems to be no missing data in this dataset.
+
+```{r}
+summary(sales_10000)
+```
+
+The dataset contains 10,000 sales records, with 14 columns. However for the purpose of the question I am asking, I will be treating these as company records and dropping the following columns: ` Country`, `Order Id`. Additional y I will be making a new primary predictor variable `Fullfilment Speed`, which is the lag between `Order Date` and `Ship Date`, after which I will drop the two date columns entirely. I am treating this as the average fulfillment speed for each of the hypothetical companies and their records contained in the dataset. 
+
+```{r}
+sales_10000 <- sales_10000 %>% 
+  select(-Country, -Order.ID) %>% 
+  mutate(Order.Date=as.Date(Order.Date, format="%m/%d/%Y"), 
+         Ship.Date=as.Date(Ship.Date, format= "%m/%d/%Y"),
+         Fulfilment_Speed =as.numeric(Ship.Date - Order.Date)) %>% 
+  select(-Order.Date, -Ship.Date) %>% 
+  mutate_if(is.character, as.factor)
+```
+
+# MODELS
+
+## Decision Tree 1
+
+### Sales Channel
+In an attempt to predict whether an order would come in through Online or Offline sales channel, I build a decision tree model that uses the following predictors. Region, Item Type, Order Priority. Units Sold, Unit Price, Unit Cost Total Revenue, Total Cost, Total Profit, and a new variable I created called Fulfillment Speed. Which is the lag between when the order was placed and when the order was shipped. I created a training a training and test set from the original dataset using a 75 / 25 split, where 75% of the data went into the training dataset and 25% went into the test dataset. I trained a classification tree and used predictions from the model to test the accuracy of the model on the testing dataset. 
+
+```{r}
+set.seed(25)
+ind <- createDataPartition(sales_10000$Sales.Channel, p=0.75, list=FALSE)
+train_1 <- sales_10000[ind, ]
+test_1 <- sales_10000[-ind, ]
+cart_1 <- rpart(Sales.Channel~.,data = train_1, method = "class")
+rpart.plot(cart_1)
+```
+The above tree has only a root node, indicating that the only predictive split is between whether data are categorized as online or offline. 51% of the dataset are online orders, leaving 49% offline in the dataset. This suggests that there are no significant predictors of whether an order come from an online or an offline sales channel.  
+
+```{r}
+preds_1 <- predict(cart_1, newdata = test_1, type = "class")
+confusionMatrix(preds_1, test_1$Sales.Channel)
+```
+The confusion matrix from the predictions reveals very poor accuracy of only 0.51, which is the same as the proportion of online orders in the dataset. The specificity is 100%, meaning that the model can identify when an order is not an online order, but has zero percent sensitivity, meaning that it is unable to predict when it is an online order. This is like due to the data being artificial and not real sales data. 
+
+## Decision Tree Model 2
+
+### Order Priority
+
+In an attempt to predict whether an order would come in as high priority, I first re-coded the original order priority variable as either high or not high (everything else). I then build another decision tree model that uses the following predictors. Region, Item Type, Sales Channel, Units Sold, Unit Price, Unit Cost Total Revenue, Total Cost, Total Profit, and  Fulfillment Speed. I again used a partition of 75 / 25.
+
+```{r}
+sales_10000 <- sales_10000 %>% 
+  mutate(Order.Priority=ifelse(Order.Priority=="H","High", "Not High"))
+ind <- createDataPartition(sales_10000$Order.Priority, p=0.75, list=FALSE)
+train_2 <- sales_10000[ind, ]
+test_2 <- sales_10000[-ind, ] %>% 
+  mutate_if(is.character, as.factor)
+cart_2 <- rpart(Order.Priority~.,data = train_2, method = "class")
+rpart.plot(cart_2)
+```
+
+The above tree also has only a root node, indicating that the only predictive split is between whether data are categorized as high priority or not. 75% of the dataset are not high priority orders, leaving 25% high priority orders in the dataset. This suggests that there are no significant predictors of whether an order with be designated as high priority.
+
+```{r}
+preds_2 <- predict(cart_2, newdata = test_2, type = "class")
+confusionMatrix(preds_2, test_2$Order.Priority)
+```
+
+The confusion matrix from the predictions reveals very poor accuracy of only 0.75, which is the same as the proportion of not high priority order in the dataset. The specificity is also 100%, again meaning that the model can identify when an order is not an high priority, but one again has a zero percent sensitivity, meaning that it cannot predicty high priority orders. 
+
+## Random Forest Model 
+
+Random forest model can be helpful by making decision trees more robust and thus more accurate, they are especially helpful in cases where the model is overfit. They are less sensitive to multicolinearity and over-training when compared to a decision tree. However, the downside to a random forest is that they are less intuitive and harder to interpret. They will also suffer from the same complaints about decision tree such as being subjective and complex as mentioned in the "the good the bad and the ugly of using decision trees" article.
+
+I used a random forest model on the second training set to test whether I could predict high priority orders and improve the model. To further prevent possible over fitting, I also implemented 10 fold cross-validation from the train model. I then generated predictions and computed a confusion matrix.   
+
+```{r}
+train_cont <- trainControl(method = "cv", number = 10)
+rf <- train(Order.Priority~.,data = train_2, method = "rf", trControl = train_cont, tuneLength = 5)
+preds_3 <- predict(rf, test_2)
+confusionMatrix(preds_3, test_2$Order.Priority)
+```
+
+Unfortunately the random forest was unable to build a better predictive model. The confusion matrix from the predictions reveals the same accuracy, sensitivity, specificity.
+
+# CONCLUSION
+
+I fitted three models, two decision trees and one random forest to try to build a robust classification model from 10000 simulated sales. My two outcomes of interest sales channel and order priority where re-coded order priority into a binary variable "high" and "not high". My first decision for sales channel performed very poorly with only 51% accuracy and no significant predictors. This was very likely because the data was simulated but had it been real data I may have attained a usable tree. As discussed in the article a usable tree would be one that is easy to understand with strategic insights that could be interpreted easily and intuitively. For example if the tree had child nodes instead of just a root node, the splits at those nodes could be used to derive the probability that the region, item type or some characteristic predicts the sales channel of an order. This could in turn be used strategically by a company to better understand what types of orders are likely to be online or vs. offline.  
+
+The second decision tree attempted to predict order priority, but similarly performed poorly, again likely due to the artificial nature of the data. The random forest yielded the same accuracy, sensitivity, specificity, meaning that these models are unable to predict high priority order from any of the predictors chosen. 
+
