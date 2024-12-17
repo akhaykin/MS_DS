@@ -1,0 +1,202 @@
+---
+title: "Final Project"
+author: "Alex Khaykin"
+date: "2024-12-17"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, results='hide',message=FALSE,warning=FALSE}
+library(tidyverse)
+library(lubridate)
+library(ggplot2)
+library(corrplot)
+library(caret)
+library(randomForest)
+library(rpart)
+library(rpart.plot)
+```
+
+# INTRODUCTION
+
+This (dataset)["https://www.kaggle.com/datasets/jehanzaibbhatti/sales-data?resource=download"] is of a particular interest to me because I am a lond distance outdoor cyclist. The dataset contains individual sales transactions for a single cycling enthusiast products provider. They provide various products to customers in multiple countries and sell both bicycle, accessories, and clothing. The landscape of modern business increasingly relies on data-driven decision-making, and effective analysis of sales data that can significantly enhance operational efficiency and customer satisfaction. For my project, I focus on trying to identify the critical factors influencing decline of `Revenue` over time. I employ both a linear regression model and a random forest model.
+
+Revenue typically reflects the the total sales from customer transactions. Revenue and sales are crucial for any company due to operational demands as well as profitability. This project will articulate the statistical relationship to explain why this companies revenue may have declined over time and I will try to provide actionable recommendations.
+
+# DATA CLEANING
+
+```{r}
+sales_data <- read.csv("C:\\Users\\akhay\\OneDrive\\Documents\\DATA_SCIENCE\\DATA_622\\Assignments\\Final_Project\\sales_data.csv") %>% 
+  mutate(Date=as.Date(Date))
+```
+
+Although this dataset requires minimal cleaning I did chose to make a version of the dataset for modeling that removes age group due to redundancy, month because of I turned month into a number, product because too much variation, and state for the same reason. I also, dropped date because I chose to use year and month as time variables. 
+
+```{r}
+sales_data2 <- sales_data %>% 
+  select(-Age_Group, -Month, -Product, -State) %>% 
+  mutate(Month=month(Date, label=FALSE)) %>% 
+  select(-Date)
+```
+
+## EDA
+
+The dataset comprises 113,036 entries with various attributes such as `Country`, `Product`, `Order_Quantity`, `Date`, and `Unit_Cost`. As well as customer demographics such as `Age` and `Customer_Gender`. The date ranges for the date are from 2011 through 2016, and the average age of customer is 35, it is also worth mentioning that the average quantiry of products ordered is 12.
+
+```{r}
+summary(sales_data2)
+```
+```{r}
+numeric_columns <- sales_data2 %>% 
+  select(where(is.numeric))
+correlation_matrix <- cor(numeric_columns, use = "complete.obs")
+```
+
+Creating a correlation plot and as anticipated there is a strong correlation between units cost, unit price, profit, cost and revenue. However, quite opposite when it comes to the relationship between unit price, unit cost and order quantity. There is a slight negative correlation with revenue and year, suggesting there has been a possible decline in sales over time.   
+
+```{r}
+corrplot(correlation_matrix, method = "color", type = "upper", 
+         tl.col = "black", tl.srt = 45, 
+         addCoef.col = "black", number.cex = 0.7)
+```
+## VISUALIZATIONS
+
+### 1. Histogram of Fulfilment Speed
+This chart shows the distribution of Revenue that most sales generate revenue under $10k, with few that generate revenue upwards of $60k. The average revenue per sale is $754.
+
+```{r}
+ggplot(sales_data2, aes(x = Revenue)) +
+  geom_histogram(fill = "blue", color = "black") +
+  labs(title = "Distribution of Revenue", x = "Revenue", y = "Frequency")
+```
+
+### 2. Bar Plot of Item Types
+
+This chart shows the count of each product category sold. Biking accsessories have the highest number of sales, followed by bikes, and then clothing. 
+
+```{r}
+ggplot(sales_data2, aes(x = Product_Category)) +
+  geom_bar(fill = "green", color = "black") +
+  labs(title = "Count of Each Product Type", x = "Product Type", y = "Number of Sales") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+### 3. Box Plot of Unit Price by Sales Channel
+
+This chart compares the product sub-category by order quantity. Most order quantities are similar in there distributions, with the exceptions of largers items such as bikes and bike racks.
+
+```{r}
+ggplot(sales_data, aes(x = Sub_Category, y = Order_Quantity)) +
+  geom_boxplot(fill = "orange", color = "black") +
+  labs(title = "Order Quantity by Order sub Category", x = "Product Sub Category", y = "Order Quantity") +
+  coord_flip()
+```
+### 4. Line Plot of sales revenue by year. 
+
+The plot confirms my initial observation that revenues looked like they have declined over time. The highest drop have was in 2013.
+
+```{r}
+ggplot(sales_data, aes(x = Date, y = Revenue)) +
+  geom_smooth(color="red") +
+  labs(title = "Total Revenue by Year", x = "Year", y = "Sales Revenue")
+```
+
+### 5. Scatter Plot of Total Revenue vs. Total Profit
+
+This chart shows the relationship between sales profit and order quantity, colored by the product category. This shows that the company makes most profit per sale for the single purchase items such as bikes, but sells more accessories and clothing, which generate lower profit although generating higher volume. 
+
+```{r}
+ggplot(sales_data2, aes(x = Order_Quantity, y = Profit, fill = Product_Category, color=Product_Category)) +
+  geom_point() +
+  labs(title = "Profit by Order Quantity for each Product Category", y = "Profit", x = "Order Qunatity")
+```
+
+# MODEL
+
+## Regression model
+
+I first chose to run a regression model because Revenue is a continuous variable. My goal is to try to explain what factors have led to the decline of revenue over time. 
+
+```{r}
+model1<- lm(Revenue ~.,data=sales_data2)
+```
+
+### Model Summary
+
+```{r}
+summary(model1)
+```
+
+### Model Diagnostic Plots
+
+```{r}
+plot(model1)
+```
+
+Model summary indicates a problem with fit of the model because we are warned of singularities. The model diagnostic plots confirm issues with the model. Most of the residuals are clustered near zero on the y-axis, which suggests that the fitted values are close to the observed values for most data points. Most of the points appear tightly clustered near the line, but there are extreme outliers that deviate significantly from the expected normal behavior. The model summary also confirm issues with model fit which very likely is due to the high multicollinearity detected above. Linear regression is not able to handle multicollinearity and thus I will need to use a different a different regression model that can like random forest.
+
+## Random Forest Model
+
+First I partitioned the data using a 72/25 split. 
+
+```{r}
+ind <- createDataPartition(sales_data2$Revenue, p=0.75, list=FALSE)
+train <- sales_data2[ind, ]
+test <- sales_data2[-ind, ] %>% 
+  mutate_if(is.character, as.factor)
+```
+
+I also set up the random forest to run with a 5-fold cross validation aferwhich I generated predections to assess how well the model performed with an RMSE. 
+
+```{r}
+# train_cont <- trainControl(method = "cv", number = 5)
+# rf <- train(Revenue~.,data = train, method = "rf", trControl = train_cont, tuneLength = 3)
+```
+
+```{r}
+# rf <- randomForest(Revenue~.,data = train, importance=TRUE)
+```
+
+
+```{r}
+# preds <- predict(rf, test)
+# sqrt(mean((preds-test$Revenue)^2))
+```
+
+## Decision Tree
+
+```{r}
+cart <- rpart(Revenue~.,data = train, method = "anova")
+rpart.plot(cart)
+```
+
+```{r}
+preds <- predict(cart, newdata = test)
+sqrt(mean((preds-test$Revenue)^2))
+```
+Even though the random forest model failed, a decision tree model did successfully run. This model predicts that the sole predictor of Revenue is item Cost which yields an RMSE of $356.29 per transaction. This seems like a very high error rate and suggests that the model is not a doing a great job of predictive model. However, it may help understand why revenues have declined if sales of high cost items such as bicycles have fallen over time. 
+
+```{r}
+ggplot(sales_data2, aes(x = Cost, y = Revenue, fill = as.factor(Year), color=as.factor(Year))) +
+  geom_point() +
+  geom_smooth() +
+  xlim(0,10000) +
+  labs(title = "Revenue by Transaction Cost by Year", y = "Revenue", x = "Cost", fill="year", color="year")
+```
+Two very large outlier were removed but this shows for all years in the dataset increasing transaction cost led to increasing revenue, however this was most notable in the earlier year of 2011.
+
+```{r}
+ggplot(sales_data2, aes(y = Revenue, x = Year, fill = Product_Category, color=Product_Category)) +
+  geom_col() +
+  labs(title = "Revenue by Product Category over Time", y = "Revenue", x = "Year")
+```
+This plot further confirms that over time smaller smaller slices of revenue proportionally have come from high cost items like bikes, because more revenue is being generated by other lower cost items like clothing and accessories than in the early years of 2011 and 2012.
+
+# CONCLUSION 
+
+An online cycling products sales company reported sales transactions from 2011 - 2016. My initial observation showed that revenue had been declining over time which I attempted to explain with a regression, random forest, and a decision tree model. My regression model was inappropriate due to high multicollinearity so I chose a random forest model which is known to be more robust to this situation. Unfortunately, I was unable to achieve success with running even a simple random forest model due to computational limitations. My code above (commented out) shows my attempt at this. Because an RF is an ensemble of decision trees, I chose to fit a single regression based decision tree instead. I found that transaction cost was the sole predictor of revenue, but this yielded a high predicted error rate. Still this suggest an area for the company to more deeply explore. For example, the scatter plot above shows the transaction costs were the highest in 2011 and the plot below that shows all revenue in 2011 and 2012 came from the sales of bicycles. Revenue declined in 2013 which corresponds with the addition of other items for sale such as accessories and clothing. Which may suggest that although these products are important for company solvency, these lower cost items cannot generate the revenue that the higher cost items did. The company may want to explore the promotional sales of high cost items to boost revenue. Additional analysis could include an SVM or NAIVE Bayes model even if RF cannot run. 
+
+
